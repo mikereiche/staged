@@ -5,7 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.17">
-<title>Requirements</title>
+<meta name="author" content="Michael Nitschinger, Oliver Gierke, Simon Baslé, Michael Reiche">
+<title>Spring Data Couchbase - Reference Documentation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /*! Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -438,18 +439,2183 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
+<h1>Spring Data Couchbase - Reference Documentation</h1>
+<div class="details">
+<span id="author" class="author">Michael Nitschinger, Oliver Gierke, Simon Baslé, Michael Reiche</span><br>
+<span id="revnumber">version {version},</span>
+<span id="revdate">2022-07-21</span>
+</div>
 </div>
 <div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>&#169; 2014-2022 The original author(s).</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically.
+</td>
+</tr>
+</table>
+</div>
+<!-- toc disabled -->
+</div>
+</div>
+<h1 id="couchbase.preface" class="sect0">Preface</h1>
+<div class="paragraph">
+<p>This reference documentation describes the general usage of the Spring Data Couchbase library.</p>
+</div>
+<div class="sect1">
+<h2 id="metadata">Project Information</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Version control - <a href="https://github.com/spring-projects/spring-data-couchbase" class="bare">https://github.com/spring-projects/spring-data-couchbase</a></p>
+</li>
+<li>
+<p>Bugtracker - <a href="https://jira.springsource.org/browse/DATACOUCH" class="bare">https://jira.springsource.org/browse/DATACOUCH</a></p>
+</li>
+<li>
+<p>Release repository - <a href="https://repo.spring.io/libs-release" class="bare">https://repo.spring.io/libs-release</a></p>
+</li>
+<li>
+<p>Milestone repository - <a href="https://repo.spring.io/libs-milestone" class="bare">https://repo.spring.io/libs-milestone</a></p>
+</li>
+<li>
+<p>Snapshot repository - <a href="https://repo.spring.io/libs-snapshot" class="bare">https://repo.spring.io/libs-snapshot</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.migrating">Migrating from Spring Data Couchbase 3.x to 4.x</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter is a quick reference of what major changes have been introduced in 4.x and gives a high-level overview of things to consider when migrating.</p>
+</div>
+<div class="paragraph">
+<p>Please note that implicitly the minimum Couchbase Server version has been bumped up to 5.5 and later, and we recommend running at least 6.0.x.</p>
+</div>
+<div class="sect2">
+<h3 id="couchbase.migrating.configuration">Configuration</h3>
+<div class="paragraph">
+<p>Since the main objective was to migrate from the Java SDK 2 to 3, configuration has changed to adapt to the new SDK and also in the long run to prepare it for scopes and collections (but it can still be used without collection support).</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+XML Configuration support has been dropped, so only java/annotation based configuration is supported.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Your configuration still has to extend the <code>AbstractCouchbaseConfiguration</code>, but since RBAC (role-based access control) is now mandatory, different properties need to be overridden in order to be configured: <code>getConnectionString</code>, <code>getUserName</code>, <code>getPassword</code> and <code>getBucketName</code>. If you want to use a non-default scope optionally you can override the <code>getScopeName</code> method. Note that if you want to use certificate based authentication or you need to customize the password authentication, the <code>authenticator</code> method can be overridden to perform this task.</p>
+</div>
+<div class="paragraph">
+<p>The new SDK still has an environment that is used to configure it, so you can override the <code>configureEnvironment</code> method and supply custom configuration if needed.</p>
+</div>
+<div class="paragraph">
+<p>For more information, see <a href="#couchbase.configuration">Installation &amp; Configuration</a>.</p>
+</div>
+<div class="sect3">
+<h4 id="_spring_boot_version_compatibility">Spring Boot Version Compatibility</h4>
+<div class="paragraph">
+<p>Spring Boot 2.3.x or higher depends on Spring Data Couchbase 4.x. Earlier versions of Couchbase are not available because SDK 2 and 3 cannot live on the same classpath.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.migrating.entities">Entities</h3>
+<div class="paragraph">
+<p>How to deal with entities has not changed, although since the SDK now does not ship annotations anymore only Spring-Data related annotations are supported.</p>
+</div>
+<div class="paragraph">
+<p>Specifically:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>com.couchbase.client.java.repository.annotation.Id</code> became <code>import org.springframework.data.annotation.Id</code></p>
+</li>
+<li>
+<p><code>com.couchbase.client.java.repository.annotation.Field</code> became <code>import org.springframework.data.couchbase.core.mapping.Field</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <code>org.springframework.data.couchbase.core.mapping.Document</code> annotation stayed the same.</p>
+</div>
+<div class="paragraph">
+<p>For more information, see <a href="#couchbase.entity">Modeling Entities</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.migrating.indexes">Automatic Index Management</h3>
+<div class="paragraph">
+<p>Automatic Index Management has been redesigned to allow more flexible indexing. New annotations have been introduced and old ones like <code>@ViewIndexed</code>, <code>@N1qlSecondaryIndexed</code> and <code>@N1qlPrimaryIndexed</code> were removed.</p>
+</div>
+<div class="paragraph">
+<p>For more information, see <a href="#couchbase.repository.indexing">Automatic Index Management</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.migrating.template">Template and ReactiveTemplate</h3>
+<div class="paragraph">
+<p>Since the Couchbase SDK 3 removes support for <code>RxJava</code> and instead adds support for <code>Reactor</code>, both the <code>couchbaseTemplate</code> as well as the <code>reactiveCouchbaseTemplate</code> can be directly accessed from the <code>AbstractCouchbaseConfiguration</code>.</p>
+</div>
+<div class="paragraph">
+<p>The template has been completely overhauled so that it now uses a fluent API to configure instead of many method overloads. This has the advantage that in the future we are able to extend the functionality without having to introduce more and more overloads that make it complicated to navigate.</p>
+</div>
+<div class="paragraph">
+<p>The following table describes the method names in 3.x and compares them to their 4.x equivalents:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Template Method Comparison</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">SDC 3.x</th>
+<th class="tableblock halign-left valign-top">SDC 4.x</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">save</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">upsertById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">insert</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">insertById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">update</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">replaceById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findById</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByView</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(removed)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findBySpatialView</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(removed)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByN1QL</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByQuery</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByN1QLProjection</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByQuery</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">queryN1QL</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(call SDK directly)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exists</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">existsById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">remove</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">removeById</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">execute</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(call SDK directly)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>In addition, the following methods have been added which were not available in 3.x:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. Template Additions in 4.x</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">removeByQuery</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows to remove entities through a N1QL query</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findByAnalytics</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Performs a find through the analytics service</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">findFromReplicasById</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Like findById, but takes replicas into account</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>We tried to unify and align the APIs more closely to the underlying SDK semantics so they are easier to correlate and navigate.</p>
+</div>
+<div class="paragraph">
+<p>For more information, see <a href="#couchbase.template">Template &amp; direct operations</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.migrating.repository">Repositories &amp; Queries</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><code>org.springframework.data.couchbase.core.query.Query</code> became <code>org.springframework.data.couchbase.repository.Query</code></p>
+</li>
+<li>
+<p><code>org.springframework.data.couchbase.repository.ReactiveCouchbaseSortingRepository</code> has been removed. Consider extending  <code>ReactiveSortingRepository</code> or <code>ReactiveCouchbaseRepository</code></p>
+</li>
+<li>
+<p><code>org.springframework.data.couchbase.repository.CouchbasePagingAndSortingRepository</code> has been removed. Consider extending  <code>PagingAndSortingRepository</code> or <code>CouchbaseRepository</code></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Support for views has been removed and N1QL queries are now the first-class citizens for all custom repository methods as well as the built-in ones by default.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The behavior itself has not changed over the previous version on how the query derivation is supposed to work. Should you encounter any queries that worked in the past and now do not work anymore please let us know.</p>
+</div>
+<div class="paragraph">
+<p>It is possible to override the default scan consistency for N1QL queries through the new <code>ScanConsistency</code> annotation.</p>
+</div>
+<div class="paragraph">
+<p>The method <code>getCouchbaseOperations()</code> has also been removed. You can still access all methods from the native Java SDK via the class <code>CouchbaseTemplate</code> or <code>Cluster</code>:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.couchbase.core.CouchbaseTemplate;
+import org.springframework.stereotype.Service;
+import com.couchbase.client.java.Cluster;
+
+@Service
+public class MyService {
+
+    @Autowired
+    private CouchbaseTemplate couchbaseTemplate;
+
+    @Autowired
+    private Cluster cluster;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>See <a href="#couchbase.repository">Couchbase repositories</a> for more information.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_full_text_search_fts">Full Text Search (FTS)</h3>
+<div class="paragraph">
+<p>The FTS API has been simplified and now can be accessed via the <code>Cluster</code> class:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.search.result.SearchResult;
+import com.couchbase.client.java.search.result.SearchRow;
+import com.couchbase.client.core.error.CouchbaseException;
+
+@Service
+public class MyService {
+
+    @Autowired
+    private Cluster cluster;
+
+    public void myMethod() {
+        try {
+          final SearchResult result = cluster
+            .searchQuery("index", SearchQuery.queryString("query"));
+
+          for (SearchRow row : result.rows()) {
+            System.out.println("Found row: " + row);
+          }
+
+          System.out.println("Reported total rows: "
+            + result.metaData().metrics().totalRows());
+        } catch (CouchbaseException ex) {
+          ex.printStackTrace();
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>See <a href="https://docs.couchbase.com/java-sdk/current/howtos/full-text-searching-with-sdk.html">the FTS Documentation</a> for more information.</p>
+</div>
+</div>
+</div>
+</div>
+<h1 id="reference" class="sect0">Reference Documentation</h1>
+<div class="sect1">
+<h2 id="couchbase.configuration">Installation &amp; Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes the common installation and configuration steps needed when working with the library.</p>
+</div>
+<div class="sect2">
+<h3 id="installation">Installation</h3>
+<div class="paragraph">
+<p>All versions intended for production use are distributed across Maven Central and the Spring release repository.
+As a result, the library can be included like any other maven dependency:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 1. Including the dependency through maven</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-data-couchbase&lt;/artifactId&gt;
+    &lt;version&gt;4.2.5&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This will pull in several dependencies, including the underlying Couchbase Java SDK, common Spring dependencies and also Jackson as the JSON mapping infrastructure.</p>
+</div>
+<div class="paragraph">
+<p>You can also grab snapshots from the <a href="https://repo.spring.io/ui/repos/tree/General/libs-snapshot/org/springframework/data/spring-data-couchbase">spring snapshot repository</a> ( https://repo.spring.io/libs-snapshot ) and milestone releases from the <a href="https://repo.spring.io/ui/repos/tree/General/libs-milestone/org/springframework/data/spring-data-couchbase">spring milestone repository</a> ( https://repo.spring.io/libs-milestone ).
+Here is an example on how to use the current SNAPSHOT dependency:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Using a snapshot version</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+  &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
+  &lt;artifactId&gt;spring-data-couchbase&lt;/artifactId&gt;
+  &lt;version&gt;4.3.0-SNAPSHOT&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;repository&gt;
+  &lt;id&gt;spring-libs-snapshot&lt;/id&gt;
+  &lt;name&gt;Spring Snapshot Repository&lt;/name&gt;
+  &lt;url&gt;https://repo.spring.io/libs-snapshot&lt;/url&gt;
+&lt;/repository&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Once you have all needed dependencies on the classpath, you can start configuring it.
+Only Java config is supported (XML config has been removed in 4.0).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="configuration-java">Annotation-based Configuration ("JavaConfig")</h3>
+<div class="paragraph">
+<p>To get started, all you need to do is subclcass the <code>AbstractCouchbaseConfiguration</code> and implement the abstract methods.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 3. Extending the <code>AbstractCouchbaseConfiguration</code></div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+public class Config extends AbstractCouchbaseConfiguration {
+
+    @Override
+    public String getConnectionString() {
+        return "couchbase://127.0.0.1";
+    }
+
+    @Override
+    public String getUserName() {
+        return "Administrator";
+    }
+
+    @Override
+    public String getPassword() {
+        return "password";
+    }
+
+    @Override
+    public String getBucketName() {
+        return "travel-sample";
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The connection string is made up of a list of hosts and an optional scheme (<code>couchbase://</code>) as shown in the code above.
+All you need to provide is a list of Couchbase nodes to bootstrap into (separated by a <code>,</code>). Please note that while one
+host is sufficient in development, it is recommended to add 3 to 5 bootstrap nodes here. Couchbase will pick up all nodes
+from the cluster automatically, but it could be the case that the only node you&#8217;ve provided is experiencing issues while
+you are starting the application.</p>
+</div>
+<div class="paragraph">
+<p>The <code>userName</code> and <code>password</code> are configured in your Couchbase Server cluster through RBAC (role-based access control).
+The <code>bucketName</code> reflects the bucket you want to use for this configuration.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, the SDK environment can be tuned by overriding the <code>configureEnvironment</code> method which takes a
+<code>ClusterEnvironment.Builder</code> to return a configured <code>ClusterEnvironment</code>.</p>
+</div>
+<div class="paragraph">
+<p>Many more things can be customized and overridden as custom beans from this configuration (for example repositories,
+validation and custom converters).</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+If you use <code>SyncGateway</code> and <code>CouchbaseMobile</code>, you may run into problem with fields prefixed by <code>_</code>.
+Since Spring Data Couchbase by default stores the type information as a <code>_class</code> attribute this can be problematic.
+Override <code>typeKey()</code> (for example to return <code>MappingCouchbaseConverter.TYPEKEY_SYNCGATEWAY_COMPATIBLE</code>) to change the
+name of said attribute.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you start your application, you should see Couchbase INFO level logging in the logs, indicating that the underlying
+Couchbase Java SDK is connecting to the database. If any errors are reported, make sure that the given credentials
+and host information are correct.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.entity">Modeling Entities</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes how to model Entities and explains their counterpart representation in Couchbase Server itself.</p>
+</div>
+<div class="paragraph">
+<p>Unresolved directive in entity.adoc - include::../../../../spring-data-commons/src/main/asciidoc/object-mapping.adoc[leveloffset=+1]</p>
+</div>
+<div class="sect2">
+<h3 id="basics">Documents and Fields</h3>
+<div class="paragraph">
+<p>All entities should be annotated with the <code>@Document</code> annotation, but it is not a requirement.</p>
+</div>
+<div class="paragraph">
+<p>Also, every field in the entity should be annotated with the <code>@Field</code> annotation. While this is - strictly speaking -
+optional, it helps to reduce edge cases and clearly shows the intent and design of the entity. It can also be used to
+store the field under a different name.</p>
+</div>
+<div class="paragraph">
+<p>There is also a special <code>@Id</code> annotation which needs to be always in place. Best practice is to also name the property
+<code>id</code>.</p>
+</div>
+<div class="paragraph">
+<p>Here is a very simple <code>User</code> entity:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 4. A simple Document with Fields</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.data.annotation.Id;
+import org.springframework.data.couchbase.core.mapping.Field;
+import org.springframework.data.couchbase.core.mapping.Document;
+
+@Document
+public class User {
+
+    @Id
+    private String id;
+
+    @Field
+    private String firstname;
+
+    @Field
+    private String lastname;
+
+    public User(String id, String firstname, String lastname) {
+        this.id = id;
+        this.firstname = firstname;
+        this.lastname = lastname;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Couchbase Server supports automatic expiration for documents.
+The library implements support for it through the <code>@Document</code> annotation.
+You can set a <code>expiry</code> value which translates to the number of seconds until the document gets removed automatically.
+If you want to make it expire in 10 seconds after mutation, set it like <code>@Document(expiry = 10)</code>.
+Alternatively, you can configure the expiry using Spring&#8217;s property support and the <code>expiryExpression</code> parameter, to allow for dynamically changing the expiry value.
+For example: <code>@Document(expiryExpression = "${valid.document.expiry}")</code>.
+The property must be resolvable to an int value and the two approaches cannot be mixed.</p>
+</div>
+<div class="paragraph">
+<p>If you want a different representation of the field name inside the document in contrast to the field name used in your entity, you can set a different name on the <code>@Field</code> annotation.
+For example if you want to keep your documents small you can set the firstname field to <code>@Field("fname")</code>.
+In the JSON document, you&#8217;ll see <code>{"fname": ".."}</code> instead of <code>{"firstname": ".."}</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>@Id</code> annotation needs to be present because every document in Couchbase needs a unique key.
+This key needs to be any string with a length of maximum 250 characters.
+Feel free to use whatever fits your use case, be it a UUID, an email address or anything else.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="datatypes">Datatypes and Converters</h3>
+<div class="paragraph">
+<p>The storage format of choice is JSON. It is great, but like many data representations it allows less datatypes than you could express in Java directly.
+Therefore, for all non-primitive types some form of conversion to and from supported types needs to happen.</p>
+</div>
+<div class="paragraph">
+<p>For the following entity field types, you don&#8217;t need to add special handling:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Primitive Types</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Java Type</th>
+<th class="tableblock halign-left valign-top">JSON Representation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">boolean</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">boolean</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">byte</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">short</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">long</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">double</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">null</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ignored on write</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Since JSON supports objects ("maps") and lists, <code>Map</code> and <code>List</code> types can be converted naturally.
+If they only contain primitive field types from the last paragraph, you don&#8217;t need to add special handling too.
+Here is an example:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 5. A Document with Map and List</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+
+    @Id
+    private String id;
+
+    @Field
+    private List&lt;String&gt; firstnames;
+
+    @Field
+    private Map&lt;String, Integer&gt; childrenAges;
+
+    public User(String id, List&lt;String&gt; firstnames, Map&lt;String, Integer&gt; childrenAges) {
+        this.id = id;
+        this.firstnames = firstnames;
+        this.childrenAges = childrenAges;
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Storing a user with some sample data could look like this as a JSON representation:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 6. A Document with Map and List - JSON</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+    "_class": "foo.User",
+    "childrenAges": {
+        "Alice": 10,
+        "Bob": 5
+    },
+    "firstnames": [
+        "Foo",
+        "Bar",
+        "Baz"
+    ]
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>You don&#8217;t need to break everything down to primitive types and Lists/Maps all the time.
+Of course, you can also compose other objects out of those primitive values.
+Let&#8217;s modify the last example so that we want to store a <code>List</code> of <code>Children</code>:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 7. A Document with composed objects</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+
+    @Id
+    private String id;
+
+    @Field
+    private List&lt;String&gt; firstnames;
+
+    @Field
+    private List&lt;Child&gt; children;
+
+    public User(String id, List&lt;String&gt; firstnames, List&lt;Child&gt; children) {
+        this.id = id;
+        this.firstnames = firstnames;
+        this.children = children;
+    }
+
+    static class Child {
+        private String name;
+        private int age;
+
+        Child(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>A populated object can look like:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 8. A Document with composed objects - JSON</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+  "_class": "foo.User",
+  "children": [
+    {
+      "age": 4,
+      "name": "Alice"
+    },
+    {
+      "age": 3,
+      "name": "Bob"
+    }
+  ],
+  "firstnames": [
+    "Foo",
+    "Bar",
+    "Baz"
+  ]
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Most of the time, you also need to store a temporal value like a <code>Date</code>.
+Since it can&#8217;t be stored directly in JSON, a conversion needs to happen.
+The library implements default converters for <code>Date</code>, <code>Calendar</code> and JodaTime types (if on the classpath).
+All of those are represented by default in the document as a unix timestamp (number).
+You can always override the default behavior with custom converters as shown later.
+Here is an example:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 9. A Document with Date and Calendar</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class BlogPost {
+
+    @Id
+    private String id;
+
+    @Field
+    private Date created;
+
+    @Field
+    private Calendar updated;
+
+    @Field
+    private String title;
+
+    public BlogPost(String id, Date created, Calendar updated, String title) {
+        this.id = id;
+        this.created = created;
+        this.updated = updated;
+        this.title = title;
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>A populated object can look like:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 10. A Document with Date and Calendar - JSON</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-json" data-lang="json">{
+  "title": "a blog post title",
+  "_class": "foo.BlogPost",
+  "updated": 1394610843,
+  "created": 1394610843897
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Optionally, Date can be converted to and from ISO-8601 compliant strings by setting system property <code>org.springframework.data.couchbase.useISOStringConverterForDate</code> to true.
+If you want to override a converter or implement your own one, this is also possible.
+The library implements the general Spring Converter pattern.
+You can plug in custom converters on bean creation time in your configuration.
+Here&#8217;s how you can configure it (in your overridden <code>AbstractCouchbaseConfiguration</code>):</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 11. Custom Converters</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Override
+public CustomConversions customConversions() {
+    return new CustomConversions(Arrays.asList(FooToBarConverter.INSTANCE, BarToFooConverter.INSTANCE));
+}
+
+@WritingConverter
+public static enum FooToBarConverter implements Converter&lt;Foo, Bar&gt; {
+    INSTANCE;
+
+    @Override
+    public Bar convert(Foo source) {
+        return /* do your conversion here */;
+    }
+
+}
+
+@ReadingConverter
+public static enum BarToFooConverter implements Converter&lt;Bar, Foo&gt; {
+    INSTANCE;
+
+    @Override
+    public Foo convert(Bar source) {
+        return /* do your conversion here */;
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>There are a few things to keep in mind with custom conversions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>To make it unambiguous, always use the <code>@WritingConverter</code> and <code>@ReadingConverter</code> annotations on your converters.
+Especially if you are dealing with primitive type conversions, this will help to reduce possible wrong conversions.</p>
+</li>
+<li>
+<p>If you implement a writing converter, make sure to decode into primitive types, maps and lists only.
+If you need more complex object types, use the <code>CouchbaseDocument</code> and <code>CouchbaseList</code> types, which are also understood by the underlying translation engine.
+Your best bet is to stick with as simple as possible conversions.</p>
+</li>
+<li>
+<p>Always put more special converters before generic converters to avoid the case where the wrong converter gets executed.</p>
+</li>
+<li>
+<p>For dates, reading converters should be able to read from any <code>Number</code> (not just <code>Long</code>).
+This is required for N1QL support.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="version">Optimistic Locking</h3>
+<div class="paragraph">
+<p>In certain situations you may want to ensure that you are not overwriting another users changes when you perform a mutation operation on a document. For this you have three choices: Transactions (since Couchbase 6.5), pessimistic concurrency (locking) or optimistic concurrency.</p>
+</div>
+<div class="paragraph">
+<p>Optimistic concurrency tends to provide better performance than pessimistic concurrency or transactions, because no actual locks are held on the data and no extra information is stored about the operation (no transaction log).</p>
+</div>
+<div class="paragraph">
+<p>To implement optimistic locking, Couchbase uses a CAS (compare and swap) approach. When a document is mutated, the CAS value also changes.
+The CAS is opaque to the client, the only thing you need to know is that it changes when the content or a meta information changes too.</p>
+</div>
+<div class="paragraph">
+<p>In other datastores, similar behavior can be achieved through an arbitrary version field with a incrementing counter.
+Since Couchbase supports this in a much better fashion, it is easy to implement.
+If you want automatic optimistic locking support, all you need to do is add a <code>@Version</code> annotation on a long field like this:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 12. A Document with optimistic locking.</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+
+        @Version
+        private long version;
+
+        // constructor, getters, setters...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>If you load a document through the template or repository, the version field will be automatically populated with the current CAS value.
+It is important to note that you shouldn&#8217;t access the field or even change it on your own.
+Once you save the document back, it will either succeed or fail with a <code>OptimisticLockingFailureException</code>.
+If you get such an exception, the further approach depends on what you want to achieve application wise.
+You should either retry the complete load-update-write cycle or propagate the error to the upper layers for proper handling.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="validation">Validation</h3>
+<div class="paragraph">
+<p>The library supports JSR 303 validation, which is based on annotations directly in your entities.
+Of course you can add all kinds of validation in your service layer, but this way its nicely coupled to your actual entities.</p>
+</div>
+<div class="paragraph">
+<p>To make it work, you need to include two additional dependencies.
+JSR 303 and a library that implements it, like the one supported by hibernate:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 13. Validation dependencies</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml">&lt;dependency&gt;
+  &lt;groupId&gt;javax.validation&lt;/groupId&gt;
+  &lt;artifactId&gt;validation-api&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+  &lt;artifactId&gt;hibernate-validator&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you need to add two beans to your configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 14. Validation beans</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+public LocalValidatorFactoryBean validator() {
+    return new LocalValidatorFactoryBean();
+}
+
+@Bean
+public ValidatingCouchbaseEventListener validationEventListener() {
+    return new ValidatingCouchbaseEventListener(validator());
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can annotate your fields with JSR303 annotations.
+If a validation on <code>save()</code> fails, a <code>ConstraintViolationException</code> is thrown.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 15. Sample Validation Annotation</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Size(min = 10)
+@Field
+private String name;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="auditing">Auditing</h3>
+<div class="paragraph">
+<p>Entities can be automatically audited (tracing which user created the object, updated the object, and at what times) through Spring Data auditing mechanisms.</p>
+</div>
+<div class="paragraph">
+<p>First, note that only entities that have a <code>@Version</code> annotated field can be audited for creation (otherwise the framework will interpret a creation as an update).</p>
+</div>
+<div class="paragraph">
+<p>Auditing works by annotating fields with <code>@CreatedBy</code>, <code>@CreatedDate</code>, <code>@LastModifiedBy</code> and <code>@LastModifiedDate</code>.
+The framework will automatically inject the correct values on those fields when persisting the entity.
+The xxxDate annotations must be put on a <code>Date</code> field (or compatible, eg. jodatime classes) while the xxxBy annotations can be put on fields of any class <code>T</code> (albeit both fields must be of the same type).</p>
+</div>
+<div class="paragraph">
+<p>To configure auditing, first you need to have an auditor aware bean in the context.
+Said bean must be of type <code>AuditorAware&lt;T&gt;</code> (allowing to produce a value that can be stored in the xxxBy fields of type <code>T</code> we saw earlier).
+Secondly, you must activate auditing in your <code>@Configuration</code> class by using the <code>@EnableCouchbaseAuditing</code> annotation.</p>
+</div>
+<div class="paragraph">
+<p>Here is an example:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 16. Sample Auditing Entity</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class AuditedItem {
+
+  @Id
+  private final String id;
+
+  private String value;
+
+  @CreatedBy
+  private String creator;
+
+  @LastModifiedBy
+  private String lastModifiedBy;
+
+  @LastModifiedDate
+  private Date lastModification;
+
+  @CreatedDate
+  private Date creationDate;
+
+  @Version
+  private long version;
+
+  //..omitted constructor/getters/setters/...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice both <code>@CreatedBy</code> and <code>@LastModifiedBy</code> are both put on a <code>String</code> field, so our <code>AuditorAware</code> must work with <code>String</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 17. Sample AuditorAware implementation</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class NaiveAuditorAware implements AuditorAware&lt;String&gt; {
+
+  private String auditor = "auditor";
+
+  @Override
+  public String getCurrentAuditor() {
+    return auditor;
+  }
+
+  public void setAuditor(String auditor) {
+    this.auditor = auditor;
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>To tie all that together, we use the java configuration both to declare an AuditorAware bean and to activate auditing:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 18. Sample Auditing Configuration</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableCouchbaseAuditing //this activates auditing
+public class AuditConfiguration extends AbstractCouchbaseConfiguration {
+
+    //... a few abstract methods omitted here
+
+    // this creates the auditor aware bean that will feed the annotations
+    @Bean
+    public NaiveAuditorAware testAuditorAware() {
+      return new NaiveAuditorAware();
+    }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.autokeygeneration">Auto generating keys</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes how couchbase document keys can be auto-generated using builtin mechanisms.
+There are two types of auto-generation strategies supported.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#couchbase.autokeygeneration.usingattributes">Key generation using attributes</a></p>
+</li>
+<li>
+<p><a href="#couchbase.autokeygeneration.unique">Key generation using uuid</a></p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The maximum key length supported by couchbase is 250 bytes.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="couchbase.autokeygeneration.configuration">Configuration</h3>
+<div class="paragraph">
+<p>Keys to be auto-generated should be annotated with <code>@GeneratedValue</code>.
+The default strategy is <code>USE_ATTRIBUTES</code>.
+Prefix and suffix for the key can be provided as part of the entity itself, these values are not persisted, they are only used for key generation.
+The prefixes and suffixes are ordered using the <code>order</code> value.
+The default order is <code>0</code>, multiple prefixes without order will overwrite the previous.
+If a value for id is already available, auto-generation will be skipped.
+The delimiter for concatenation can be provided using <code>delimiter</code>, the default delimiter is <code>.</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 19. Annotation for GeneratedValue</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+     @Id @GeneratedValue(strategy = USE_ATTRIBUTES, delimiter = ".")
+     private String id;
+     @IdPrefix(order=0)
+     private String userPrefix;
+     @IdSuffix(order=0)
+     private String userSuffix;
+     ...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.autokeygeneration.usingattributes">Key generation using attributes</h3>
+<div class="paragraph">
+<p>It is a common practice to generate keys using a combination of the document attributes.
+Key generation using attributes concatenates all the attribute values annotated with <code>IdAttribute</code>, based on the ordering provided similar to prefixes and suffixes.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 20. Annotation for IdAttribute</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+     @Id @GeneratedValue(strategy = USE_ATTRIBUTES)
+     private String id;
+     @IdAttribute
+     private String userid;
+     ...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.autokeygeneration.unique">Key generation using uuid</h3>
+<div class="paragraph">
+<p>This auto-generation uses UUID random generator to generate document keys consuming 16 bytes of key space.
+This mechanism is only recommended for test scaffolding.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 21. Annotation for Unique key generation</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class User {
+     @Id @GeneratedValue(strategy = UNIQUE)
+     private String id;
+     ...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Unresolved directive in index.adoc - include::../../../../spring-data-commons/src/main/asciidoc/repositories.adoc[]</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.repository">Couchbase repositories</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The goal of Spring Data repository abstraction is to significantly reduce the amount of boilerplate code required to implement data access layers for various persistence stores.</p>
+</div>
+<div class="paragraph">
+<p>By default, operations are backed by Key/Value if they are single-document operations and the ID is known. For all other operations by default N1QL queries are generated, and as a result proper indexes must be created for performant data access.</p>
+</div>
+<div class="paragraph">
+<p>Note that you can tune the consistency you want for your queries (see <a href="#couchbase.repository.consistency">Querying with consistency</a>) and have different repositories backed by different buckets (see <a href="#couchbase.repository.multibucket">[couchbase.repository.multibucket]</a>)</p>
+</div>
+<div class="sect2">
+<h3 id="couchbase.repository.configuration">Configuration</h3>
+<div class="paragraph">
+<p>While support for repositories is always present, you need to enable them in general or for a specific namespace.
+If you extend <code>AbstractCouchbaseConfiguration</code>, just use the <code>@EnableCouchbaseRepositories</code> annotation.
+It provides lots of possible options to narrow or customize the search path, one of the most common ones is <code>basePackages</code>.</p>
+</div>
+<div class="paragraph">
+<p>Also note that if you are running inside spring boot, the autoconfig support already sets up the annotation for you so you only need to use it if you want to override the defaults.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 22. Annotation-Based Repository Setup</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableCouchbaseRepositories(basePackages = {"com.couchbase.example.repos"})
+public class Config extends AbstractCouchbaseConfiguration {
+    //...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>An advanced usage is described in <a href="#couchbase.repository.multibucket">[couchbase.repository.multibucket]</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.repository.usage">Usage</h3>
+<div class="paragraph">
+<p>In the simplest case, your repository will extend the <code>CrudRepository&lt;T, String&gt;</code>, where T is the entity that you want to expose.
+Let&#8217;s look at a repository for a UserInfo:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 23. A UserInfo repository</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">import org.springframework.data.repository.CrudRepository;
+
+public interface UserRepository extends CrudRepository&lt;UserInfo, String&gt; {
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Please note that this is just an interface and not an actual class.
+In the background, when your context gets initialized, actual implementations for your repository descriptions get created and you can access them through regular beans.
+This means you will save lots of boilerplate code while still exposing full CRUD semantics to your service layer and application.</p>
+</div>
+<div class="paragraph">
+<p>Now, let&#8217;s imagine we <code>@Autowire</code> the <code>UserRepository</code> to a class that makes use of it.
+What methods do we have available?</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 4. Exposed methods on the UserRepository</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">UserInfo save(UserInfo entity)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Save the given entity.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Iterable&lt;UserInfo&gt; save(Iterable&lt;UserInfo&gt; entity)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Save the list of entities.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">UserInfo findOne(String id)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Find a entity by its unique id.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">boolean exists(String id)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if a given entity exists by its unique id.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Iterable&lt;UserInfo&gt; findAll()</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Find all entities by this type in the bucket.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Iterable&lt;UserInfo&gt; findAll(Iterable&lt;String&gt; ids)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Find all entities by this type and the given list of ids.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">long count()</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Count the number of entities in the bucket.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">void delete(String id)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete the entity by its id.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">void delete(UserInfo entity)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete the entity.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">void delete(Iterable&lt;UserInfo&gt; entities)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete all given entities.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">void deleteAll()</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete all entities by type in the bucket.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Now that&#8217;s awesome!
+Just by defining an interface we get full CRUD functionality on top of our managed entity.</p>
+</div>
+<div class="paragraph">
+<p>While the exposed methods provide you with a great variety of access patterns, very often you need to define custom ones.
+You can do this by adding method declarations to your interface, which will be automatically resolved to requests in the background, as we&#8217;ll see in the next sections.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.repository.querying">Repositories and Querying</h3>
+<div class="sect3">
+<h4 id="couchbase.repository.n1ql">N1QL based querying</h4>
+<div class="paragraph">
+<p>Prerequisite is to have created a PRIMARY INDEX on the bucket where the entities will be stored.</p>
+</div>
+<div class="paragraph">
+<p>Here is an example:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 24. An extended UserInfo repository with N1QL queries</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface UserRepository extends CrudRepository&lt;UserInfo, String&gt; {
+
+    @Query("#{#n1ql.selectEntity} WHERE role = 'admin' AND #{#n1ql.filter}")
+    List&lt;UserInfo&gt; findAllAdmins();
+
+    List&lt;UserInfo&gt; findByFirstname(String fname);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Here we see two N1QL-backed ways of querying.</p>
+</div>
+<div class="paragraph">
+<p>The first method uses the <code>Query</code> annotation to provide a N1QL statement inline.
+SpEL (Spring Expression Language) is supported by surrounding SpEL expression blocks between <code>#{</code> and <code>}</code>.
+A few N1QL-specific values are provided through SpEL:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>#n1ql.selectEntity</code> allows to easily make sure the statement will select all the fields necessary to build the full entity (including document ID and CAS value).</p>
+</li>
+<li>
+<p><code>#n1ql.filter</code> in the WHERE clause adds a criteria matching the entity type with the field that Spring Data uses to store type information.</p>
+</li>
+<li>
+<p><code>#n1ql.bucket</code> will be replaced by the name of the bucket the entity is stored in, escaped in backticks.</p>
+</li>
+<li>
+<p><code>#n1ql.scope</code> will be replaced by the name of the scope the entity is stored in, escaped in backticks.</p>
+</li>
+<li>
+<p><code>#n1ql.collection</code> will be replaced by the name of the collection the entity is stored in, escaped in backticks.</p>
+</li>
+<li>
+<p><code>#n1ql.fields</code> will be replaced by the list of fields (eg. for a SELECT clause) necessary to reconstruct the entity.</p>
+</li>
+<li>
+<p><code>#n1ql.delete</code> will be replaced by the <code>delete from</code> statement.</p>
+</li>
+<li>
+<p><code>#n1ql.returning</code> will be replaced by returning clause needed for reconstructing entity.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+We recommend that you always use the <code>selectEntity</code> SpEL and a WHERE clause with a <code>filter</code> SpEL (since otherwise your query could be impacted by entities from other repositories).
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>String-based queries support parametrized queries.
+You can either use positional placeholders like &#8220;$1&#8221;, in which case each of the method parameters will map, in order, to <code>$1</code>, <code>$2</code>, <code>$3</code>&#8230;&#8203; Alternatively, you can use named placeholders using the &#8220;$someString&#8221; syntax.
+Method parameters will be matched with their corresponding placeholder using the parameter&#8217;s name, which can be overridden by annotating each parameter (except a <code>Pageable</code> or <code>Sort</code>) with <code>@Param</code> (eg. <code>@Param("someString")</code>).
+You cannot mix the two approaches in your query and will get an <code>IllegalArgumentException</code> if you do.</p>
+</div>
+<div class="paragraph">
+<p>Note that you can mix N1QL placeholders and SpEL. N1QL placeholders will still consider all method parameters, so be sure to use the correct index like in the example below:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 25. An inline query that mixes SpEL and N1QL placeholders</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Query("#{#n1ql.selectEntity} WHERE #{#n1ql.filter} AND #{[0]} = $2")
+public List&lt;User&gt; findUsersByDynamicCriteria(String criteriaField, Object criteriaValue)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This allows you to generate queries that would work similarly to eg. <code>AND name = "someName"</code> or <code>AND age = 3</code>, with a single method declaration.</p>
+</div>
+<div class="paragraph">
+<p>You can also do single projections in your N1QL queries (provided it selects only one field and returns only one result, usually an aggregation like <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>&#8230;&#8203;).
+Such projection would have a simple return type like <code>long</code>, <code>boolean</code> or <code>String</code>.
+This is <strong>NOT</strong> intended for projections to DTOs.</p>
+</div>
+<div class="paragraph">
+<p>Another example:<br>
+<code>#{#n1ql.selectEntity} WHERE #{#n1ql.filter} AND test = $1</code><br>
+is equivalent to<br>
+<code>SELECT #{#n1ql.fields} FROM #{#n1ql.collection} WHERE #{#n1ql.filter} AND test = $1</code></p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">A practical application of SpEL with Spring Security</div>
+<div class="paragraph">
+<p>SpEL can be useful when you want to do a query depending on data injected by other Spring components, like Spring Security.
+Here is what you need to do to extend the SpEL context to get access to such external data.</p>
+</div>
+<div class="paragraph">
+<p>First, you need to implement an <code>EvaluationContextExtension</code> (use the support class as below):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">class SecurityEvaluationContextExtension extends EvaluationContextExtensionSupport {
+
+  @Override
+  public String getExtensionId() {
+    return "security";
+  }
+
+  @Override
+  public SecurityExpressionRoot getRootObject() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return new SecurityExpressionRoot(authentication) {};
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then all you need to do for Spring Data Couchbase to be able to access associated SpEL values is to declare a corresponding bean in your configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Bean
+EvaluationContextExtension securityExtension() {
+    return new SecurityEvaluationContextExtension();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This could be useful to craft a query according to the role of the connected user for instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Query("#{#n1ql.selectEntity} WHERE #{#n1ql.filter} AND " +
+"role = '?#{hasRole('ROLE_ADMIN') ? 'public_admin' : 'admin'}'")
+List&lt;UserInfo&gt; findAllAdmins(); //only ROLE_ADMIN users will see hidden admins</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Delete query example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Query("#{#n1ql.delete} WHERE #{#n1ql.filter} AND " +
+"username = $1 #{#n1ql.returning}")
+UserInfo removeUser(String username);</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The second method uses Spring-Data&#8217;s query derivation mechanism to build a N1QL query from the method name and parameters.
+This will produce a query looking like this: <code>SELECT &#8230;&#8203; FROM &#8230;&#8203; WHERE firstName = "valueOfFnameAtRuntime"</code>.
+You can combine these criteria, even do a count with a name like <code>countByFirstname</code> or a limit with a name like <code>findFirst3ByLastname</code>&#8230;&#8203;</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Actually the generated N1QL query will also contain an additional N1QL criteria in order to only select documents that match the repository&#8217;s entity class.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Most Spring-Data keywords are supported:
+.Supported keywords inside @Query (N1QL) method names</p>
+</div>
+<table class="tableblock frame-all grid-all fit-content">
+<colgroup>
+<col>
+<col>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Keyword</th>
+<th class="tableblock halign-left valign-top">Sample</th>
+<th class="tableblock halign-left valign-top">N1QL WHERE clause snippet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>And</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByLastnameAndFirstname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lastName = a AND firstName = b</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Or</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByLastnameOrFirstname</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lastName = a OR firstName = b</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Is,Equals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByField</code>,<code>findByFieldEquals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field = a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNot,Not</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsNot</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field != a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Between</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldBetween</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field BETWEEN a AND b</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsLessThan,LessThan,IsBefore,Before</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsLessThan</code>,<code>findByFieldBefore</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field &lt; a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsLessThanEqual,LessThanEqual</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsLessThanEqual</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field &#8656; a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsGreaterThan,GreaterThan,IsAfter,After</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsGreaterThan</code>,<code>findByFieldAfter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field &gt; a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsGreaterThanEqual,GreaterThanEqual</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldGreaterThanEqual</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field &gt;= a</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNull</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsNull</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field IS NULL</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNotNull,NotNull</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsNotNull</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field IS NOT NULL</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsLike,Like</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldLike</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field LIKE "a"</code> - a should be a String containing % and _ (matching n and 1 characters)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNotLike,NotLike</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldNotLike</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field NOT LIKE "a"</code> - a should be a String containing % and _ (matching n and 1 characters)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsStartingWith,StartingWith,StartsWith</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldStartingWith</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field LIKE "a%"</code> - a should be a String prefix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsEndingWith,EndingWith,EndsWith</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldEndingWith</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field LIKE "%a"</code> - a should be a String suffix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsContaining,Containing,Contains</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldContains</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field LIKE "%a%"</code> - a should be a String</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNotContaining,NotContaining,NotContains</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldNotContaining</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field NOT LIKE "%a%"</code> - a should be a String</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsIn,In</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIn</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field IN array</code> - note that the next parameter value (or its children if a collection/array) should be compatible for storage in a <code>JsonArray</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsNotIn,NotIn</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldNotIn</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field NOT IN array</code> - note that the next parameter value (or its children if a collection/array) should be compatible for storage in a <code>JsonArray</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsTrue,True</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIsTrue</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field = TRUE</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IsFalse,False</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldFalse</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field = FALSE</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>MatchesRegex,Matches,Regex</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldMatches</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>REGEXP_LIKE(field, "a")</code> - note that the ignoreCase is ignored here, a is a regular expression in String form</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Exists</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldExists</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field IS NOT MISSING</code> - used to verify that the JSON contains this attribute</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OrderBy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldOrderByLastnameDesc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>field = a ORDER BY lastname DESC</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IgnoreCase</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>findByFieldIgnoreCase</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>LOWER(field) = LOWER("a")</code> - a must be a String</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>You can use both counting queries and <a href="#repositories.limit-query-result">[repositories.limit-query-result]</a> features with this approach.</p>
+</div>
+<div class="paragraph">
+<p>With N1QL, another possible interface for the repository is the <code>PagingAndSortingRepository</code> one (which extends <code>CrudRepository</code>).
+It adds two methods:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 5. Exposed methods on the PagingAndSortingRepository</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Iterable&lt;T&gt; findAll(Sort sort);</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows to retrieve all relevant entities while sorting on one of their attributes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Page&lt;T&gt; findAll(Pageable pageable);</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allows to retrieve your entities in pages. The returned <code>Page</code> allows to easily get the next page&#8217;s <code>Pageable</code> as well as the list of items. For the first call, use <code>new PageRequest(0, pageSize)</code> as Pageable.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+You can also use <code>Page</code> and <code>Slice</code> as method return types as well with a N1QL backed repository.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+If pageable and sort parameters are used with inline queries, there should not be any order by, limit or offset clause in the inline query itself otherwise the server would reject the query as malformed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="couchbase.repository.indexing">Automatic Index Management</h4>
+<div class="paragraph">
+<p>By default, it is expected that the user creates and manages optimal indexes for their queries. Especially in the early stages of development, it can come in handy to automatically create indexes to get going quickly.</p>
+</div>
+<div class="paragraph">
+<p>For N1QL, the following annotations are provided which need to be attached to the entity (either on the class or the field):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>@QueryIndexed</code>: Placed on a field to signal that this field should be part of the index</p>
+</li>
+<li>
+<p><code>@CompositeQueryIndex</code>: Placed on the class to signal that an index on more than one field (composite) should be created.</p>
+</li>
+<li>
+<p><code>@CompositeQueryIndexes</code>: If more than one <code>CompositeQueryIndex</code> should be created, this annotation will take a list of them.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For example, this is how you define a composite index on an entity:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 26. Composite index on two fields with ordering</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+@CompositeQueryIndex(fields = {"id", "name desc"})
+public class Airline {
+   @Id
+   String id;
+
+	@QueryIndexed
+	String name;
+
+	@PersistenceConstructor
+	public Airline(String id, String name) {
+		this.id = id;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>By default, index creation is disabled. If you want to enable it you need to override it on the configuration:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 27. Enable auto index creation</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Override
+protected boolean autoIndexCreation() {
+ return true;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="couchbase.repository.consistency">Querying with consistency</h4>
+<div class="paragraph">
+<p>By default repository queries that use N1QL use the <code>NOT_BOUNDED</code> scan consistency. This means that results return quickly, but the data from the index may not yet contain data from previously written operations (called eventual consistency). If you need "ready your own write" semantics for a query, you need to use the <code>@ScanConsistency</code> annotation. Here is an example:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 28. Using a different scan consistency</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Repository
+public interface AirportRepository extends PagingAndSortingRepository&lt;Airport, String&gt; {
+
+	@Override
+	@ScanConsistency(query = QueryScanConsistency.REQUEST_PLUS)
+	Iterable&lt;Airport&gt; findAll();
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dto_projections">DTO Projections</h4>
+<div class="paragraph">
+<p>Spring Data Repositories usually return the domain model when using query methods.
+However, sometimes, you may need to alter the view of that model for various reasons.
+In this section, you will learn how to define projections to serve up simplified and reduced views of resources.</p>
+</div>
+<div class="paragraph">
+<p>Look at the following domain model:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Entity
+public class Person {
+
+  @Id @GeneratedValue
+  private Long id;
+  private String firstName, lastName;
+
+  @OneToOne
+  private Address address;
+  …
+}
+
+@Entity
+public class Address {
+
+  @Id @GeneratedValue
+  private Long id;
+  private String street, state, country;
+
+  …
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This <code>Person</code> has several attributes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>id</code> is the primary key</p>
+</li>
+<li>
+<p><code>firstName</code> and <code>lastName</code> are data attributes</p>
+</li>
+<li>
+<p><code>address</code> is a link to another domain object</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Now assume we create a corresponding repository as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">interface PersonRepository extends CrudRepository&lt;Person, Long&gt; {
+
+  Person findPersonByFirstName(String firstName);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Spring Data will return the domain object including all of its attributes.
+There are two options just to retrieve the <code>address</code> attribute.
+One option is to define a repository for <code>Address</code> objects like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">interface AddressRepository extends CrudRepository&lt;Address, Long&gt; {}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this situation, using <code>PersonRepository</code> will still return the whole <code>Person</code> object.
+Using <code>AddressRepository</code> will return just the <code>Address</code>.</p>
+</div>
+<div class="paragraph">
+<p>However, what if you do not want to expose <code>address</code> details at all?
+You can offer the consumer of your repository service an alternative by defining one or more projections.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 29. Simple Projection</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">interface NoAddresses {  <b class="conum">(1)</b>
+
+  String getFirstName(); <b class="conum">(2)</b>
+
+  String getLastName();  <b class="conum">(3)</b>
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This projection has the following details:</p>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>A plain Java interface making it declarative.</p>
+</li>
+<li>
+<p>Export the <code>firstName</code>.</p>
+</li>
+<li>
+<p>Export the <code>lastName</code>.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>NoAddresses</code> projection only has getters for <code>firstName</code> and <code>lastName</code> meaning that it will not serve up any address information.
+The query method definition returns in this case <code>NoAdresses</code> instead of <code>Person</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">interface PersonRepository extends CrudRepository&lt;Person, Long&gt; {
+
+  NoAddresses findByFirstName(String firstName);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Projections declare a contract between the underlying type and the method signatures related to the exposed properties.
+Hence it is required to name getter methods according to the property name of the underlying type.
+If the underlying property is named <code>firstName</code>, then the getter method must be named <code>getFirstName</code> otherwise Spring Data is not able to look up the source property.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.reactiverepository">Reactive Couchbase repository</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="couchbase.reactiverepository.intro">Introduction</h3>
+<div class="paragraph">
+<p>This chapter describes the reactive repository support for couchbase.
+This builds on the core repository support explained in <a href="#couchbase.repository">Couchbase repositories</a>.
+So make sure you’ve got a sound understanding of the basic concepts explained there.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.reactiverepository.libraries">Reactive Composition Libraries</h3>
+<div class="paragraph">
+<p>The Couchbase Java SDK 3.x moved from RxJava to Reactor, so it blends in very nicely with the reactive spring ecosystem.</p>
+</div>
+<div class="paragraph">
+<p>Reactive Couchbase repositories provide project Reactor wrapper types and can be used by simply extending from one of the library-specific repository interfaces:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ReactiveCrudRepository</p>
+</li>
+<li>
+<p>ReactiveSortingRepository</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.reactiverepository.usage">Usage</h3>
+<div class="paragraph">
+<p>Let&#8217;s create a simple entity to start with:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 30. Sample Person entity</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>A corresponding repository implementation may look like this:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 31. Basic repository interface to persist Person entities</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>public interface ReactivePersonRepository extends ReactiveSortingRepository&lt;Person, Long&gt; {
+
+  Flux&lt;Person&gt; findByFirstname(String firstname);
+
+  Flux&lt;Person&gt; findByFirstname(Publisher&lt;String&gt; firstname);
+
+  Flux&lt;Person&gt; findByFirstnameOrderByLastname(String firstname, Pageable pageable);
+
+  Mono&lt;Person&gt; findByFirstnameAndLastname(String firstname, String lastname);
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>For JavaConfig use the <code>@EnableReactiveCouchbaseRepositories</code> annotation.
+The annotation carries the very same attributes like the namespace element.
+If no base package is configured the infrastructure will scan the package of the annotated configuration class.</p>
+</div>
+<div class="paragraph">
+<p>Also note that if you are using it in a spring boot setup you likely can omit the annotation since it is autoconfigured for you.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 32. JavaConfig for repositories</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableReactiveCouchbaseRepositories
+class ApplicationConfig extends AbstractCouchbaseConfiguration {
+	// ... (see configuration for details)
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>As our domain repository extends <code>ReactiveSortingRepository</code> it provides you with CRUD operations as well as methods for sorted access to the entities.
+Working with the repository instance is just a matter of dependency injecting it into a client.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 33. Sorted access to Person entities</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public class PersonRepositoryTests {
+
+    @Autowired
+    ReactivePersonRepository repository;
+
+    @Test
+    public void sortsElementsCorrectly() {
+      Flux&lt;Person&gt; persons = repository.findAll(Sort.by(new Order(ASC, "lastname")));
+      assertNotNull(perons);
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.reactiverepository.querying">Repositories and Querying</h3>
+<div class="paragraph">
+<p>Spring Data&#8217;s Reactive Couchbase comes with full querying support already provided by the blocking <a href="#couchbase.repository.querying">Repositories and Querying</a></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.template">Template &amp; direct operations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The template provides lower level access to the underlying database and also serves as the foundation for repositories.
+Any time a repository is too high-level for you needs chances are good that the templates will serve you well. Note that
+you can always drop into the SDK directly through the beans exposed on the <code>AbstractCouchbaseConfiguration</code>.</p>
+</div>
+<div class="sect2">
+<h3 id="template.ops">Supported operations</h3>
+<div class="paragraph">
+<p>The template can be accessed through the <code>couchbaseTemplate</code>  and <code>reactiveCouchbaseTemplate</code> beans out of your context.
+Once you&#8217;ve got a reference to it, you can run all kinds of operations against it.
+Other than through a repository, in a template you need to always specify the target entity type which you want to get converted.</p>
+</div>
+<div class="paragraph">
+<p>The templates use a fluent-style API which allows you to chain in optional operators as needed. As an example, here is
+how you store a user and then find it again by its ID:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 34. Fluent template access</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// Create an Entity
+User user = new User(UUID.randomUUID().toString(), "firstname", "lastname");
+
+// Upsert it
+couchbaseTemplate.upsertById(User.class).one(user);
+
+// Retrieve it again
+User found = couchbaseTemplate.findById(User.class).one(user.getId());</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>If you wanted to use a custom durability requirement for the <code>upsert</code> operation you can chain it in:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 35. Upsert with durability</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">User modified = couchbaseTemplate
+  .upsertById(User.class)
+  .withDurability(DurabilityLevel.MAJORITY)
+  .one(user);</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>In a similar fashion, you can perform a N1QL operation:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 36. N1QL query on the template</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">final List&lt;User&gt; foundUsers = couchbaseTemplate
+  .findByQuery(User.class)
+  .consistentWith(QueryScanConsistency.REQUEST_PLUS)
+  .all();</code></pre>
+</div>
+</div>
+</div>
+</div>
 <div id="couchbase.transactions" class="paragraph">
 <p>Couchbase Transactions
 = Transaction Support</p>
 </div>
 <div class="paragraph">
-<p>Couchbase supports <a href="https://docs.couchbase.com/server/6.5/learn/data/transactions.html">Distributed Transactions</a>. This section documents on how to use it with Spring Data Couchbase.</p>
+<p>Couchbase supports <a href="https://docs.couchbase.com/server/6.5/learn/data/transactions.html">Distributed Transactions</a>. This section documents how to use it with Spring Data Couchbase.</p>
 </div>
-<div class="sect1">
-<h2 id="_requirements">Requirements</h2>
-<div class="sectionbody">
+</div>
+<div class="sect2">
+<h3 id="_requirements">Requirements</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -464,12 +2630,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_getting_started_configuration">Getting Started &amp; Configuration</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_getting_started_configuration">Getting Started &amp; Configuration</h3>
 <div class="paragraph">
-<p>The Couchbase Transaction Manager and Couchbase Transactional Operator are available as beans from the Configuration class that extends AbstractCouchbaseConfiguration.</p>
+<p>Couchbase Transactions are leveraged with the @Transactional operator (using the Couchbase Transaction Manager), a Couchbase Transaction Template (created from the Transaction Manager),
+or the Couchbase Transactional Operator.</p>
+</div>
+<div class="paragraph">
+<p>The Couchbase Transaction Manager, Couchbase Transactional Operator and Couchbase Transaction Template(5.0.0-M6+)  are available as beans from the Configuration class that
+extends AbstractCouchbaseConfiguration.</p>
 </div>
 <div class="paragraph">
 <p>Functioning of the  @Transactional method annotation requires the configuration class to be annotated
@@ -481,14 +2650,14 @@ method from the same class will not invoke the Method Interceptor that does the 
 <p>The samples provided are intentionally simple in that they operate on a single document. They could also operate on multiple documents.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 1. Transaction Configuration</div>
+<div class="title">Example 37. Transaction Configuration</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
 @EnableReactiveCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
-@EnableTransactionManagement &lt;&lt;&lt; Add for @Transaction annotation support
+@EnableTransactionManagement // Add for @Transactional annotation support
 static class Config extends AbstractCouchbaseConfiguration {
 
     // Usual Setup
@@ -514,19 +2683,17 @@ static class Config extends AbstractCouchbaseConfiguration {
 <p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_transactions_with_transactiontemplate">Transactions with TransactionTemplate</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_transactions_with_transactiontemplate">Transactions with TransactionTemplate</h3>
 <div class="paragraph">
-<p>The TransactionTemplate class that simplifies programmatic transaction demarcation and transaction exception handling.
+<p>The TransactionTemplate class simplifies programmatic transaction demarcation and transaction exception handling.
 The central method is execute, supporting transactional code that implements the TransactionCallback interface. This template handles the transaction lifecycle and possible exceptions such that neither the TransactionCallback implementation nor the calling code needs to explicitly handle transactions.
 Typical usage: Allows for writing low-level data access objects that use resources such as JDBC DataSources but are not transaction-aware themselves. Instead, they can implicitly participate in transactions handled by higher-level application services utilizing this class, making calls to the low-level services via an inner-class callback object.
 Can be used within a service implementation via direct instantiation with a transaction manager reference, or get prepared in an application context and passed to services as bean reference. Note: The transaction manager should always be configured as bean in the application context: in the first case given to the service directly, in the second case given to the prepared template.
 Supports setting the propagation behavior and the isolation level by name, for convenient configuration in context definitions.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 2. Transaction Access</div>
+<div class="title">Example 38. Using the TransactionTemplate</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -534,7 +2701,7 @@ Supports setting the propagation behavior and the isolation level by name, for c
 @Autowired TransactionManager transactionManager;
 TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-// After 5.0.0-M5 transaction template bean exists
+// After M6 transaction template bean exists
 @Autowired TransactionTemplate transactionTemplate;
 
     transactionTemplate.executeWithoutResult(status -&gt; {
@@ -547,10 +2714,13 @@ TransactionTemplate transactionTemplate = new TransactionTemplate(transactionMan
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_transactions_with_couchbasetransactionmanager">Transactions with CouchbaseTransactionManager</h3>
+<div class="paragraph">
+<p>Note: Reactive Couchbase Transactions cannot be supported via the
+@Transactional annotation. See the section "Transactions with CouchbaseTransactionalOperator"
+for supporting Reactive Couchbase Transactions using the Transactional Operator.</p>
 </div>
-<div class="sect1">
-<h2 id="_transactions_with_couchbasetransactionmanager">Transactions with CouchbaseTransactionManager</h2>
-<div class="sectionbody">
 <div class="paragraph">
 <p>@Transactional Describes a transaction attribute on an individual method or on a class.</p>
 </div>
@@ -570,8 +2740,8 @@ class, and in fact AnnotationTransactionAttributeSource will directly
 convert this annotation&#8217;s attributes to properties in RuleBasedTransactionAttribute,
 so that Spring&#8217;s transaction support code does not have to know about annotations.</p>
 </div>
-<div class="sect2">
-<h3 id="_attribute_semantics">Attribute Semantics</h3>
+<div class="sect3">
+<h4 id="_attribute_semantics">Attribute Semantics</h4>
 <div class="paragraph">
 <p>If no custom rollback rules are configured in this annotation, the transaction
 will roll back on RuntimeException and Error but not on checked
@@ -634,8 +2804,8 @@ annotation, consult the org.springframework.transaction.TransactionDefinition
 and org.springframework.transaction.interceptor.TransactionAttribute javadocs.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_transaction_management">Transaction Management</h3>
+<div class="sect3">
+<h4 id="_transaction_management">Transaction Management</h4>
 <div class="paragraph">
 <p>This annotation commonly works with thread-bound transactions managed by a
 org.springframework.transaction.PlatformTransactionManager, exposing a
@@ -644,11 +2814,11 @@ Note: This does NOT propagate to newly started threads within the method.</p>
 </div>
 <div class="paragraph">
 <p>Couchbase does not supply a reactive transaction manager, therefore it cannot support
-@Transactional on reactive methods. Couchbase provides r transaction support
+@Transactional on reactive methods. Couchbase provides reactive transaction support
 via the CouchbaseTransactionalOperator.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 3. Transaction Access</div>
+<div class="title">Example 39. Transaction Access</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -669,7 +2839,7 @@ public class PersonService {
         personOperations = ops;
     }
 
-    @Transactional(transactionManager = BeanNames.COUCHBASE_TRANSACTION_MANAGER)
+    @Transactional(transactionManager = BeanNames.COUCHBASE_TRANSACTION_MANAGER) // default, shown for clarity
     public Person replacePerson(String id) {
         Person p = personOperations.findById(Person.class).one(id);
         p.setFirstname(p.getFirstname()+" Junior");
@@ -683,19 +2853,17 @@ public class PersonService {
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_transactions_with_couchbasetransactionaloperator">Transactions with CouchbaseTransactionalOperator</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_transactions_with_couchbasetransactionaloperator">Transactions with CouchbaseTransactionalOperator</h3>
 <div class="paragraph">
 <p>CouchbaseTransactionalOperator is used for reactive transactions. It is an important class for Couchbase Transactions in Spring Data as there is no Reactive TransactionManager for Couchbase.
-Operator class that simplifies programmatic transaction demarcation and transaction exception handling.
+The class simplifies programmatic transaction demarcation and transaction exception handling.
 The central method is transactional(), supporting transactional wrapping of functional sequences code that. This operator handles the transaction lifecycle and possible exceptions such that neither the ReactiveTransactionCallback implementation nor the calling code needs to explicitly handle transactions.
 Typical usage: Allows for writing low-level data access objects that use resources such as database connections but are not transaction-aware themselves. Instead, they can implicitly participate in transactions handled by higher-level application services utilizing this class, making calls to the low-level services via an inner-class callback object.</p>
 </div>
 <div class="paragraph">
 <p>Note that a CouchbaseTransactionalOperator is available as a bean.
-If creating one explicitly, it must be created with
+If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager)).
 .TransactionalOperator Construction</p>
 </div>
 <div class="exampleblock">
@@ -707,11 +2875,8 @@ If creating one explicitly, it must be created with
 </div>
 </div>
 </div>
-<div class="paragraph">
-<p>and not TransactionalOperator.create(manager).</p>
-</div>
 <div class="exampleblock">
-<div class="title">Example 4. Transaction Access Using transactionalOperator.execute()</div>
+<div class="title">Example 40. Transaction Access Using TransactionalOperator.execute()</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -720,30 +2885,29 @@ If creating one explicitly, it must be created with
     Person person = rxCBTmpl.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
     Flux&lt;Person&gt; result = txOperator.execute((ctx) -&gt; rxCBTmpl.findById(Person.class).one(person.id())
         .flatMap(p -&gt; rxCBTmpl.replaceById(Person.class).one(p.withFirstName("Walt"))));
-    result.blockLast();
-    Person pFound = rxCBTmpl.findById(Person.class).inCollection(cName).one(person.id()).block();</code></pre>
+    result.blockLast();</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. Transaction Access Using transactional()</div>
+<div class="title">Example 41. Transaction Access Using transactional()</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Autowired TransactionalOperator txOperator;
 
     Person person = rxCBTmpl.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
-    Mono&lt;?&gt; result = rxCBTmpl.findById(Person.class).one(person.id())
+    Mono&lt;Person&gt; result = rxCBTmpl.findById(Person.class).one(person.id())
         .flatMap(p -&gt; rxCBTmpl.replaceById(Person.class).one(p.withFirstName("Walt")))
         .as(txOperator::transactional);
-    Person pFound = rxCBTmpl.findById(Person.class).inCollection(cName).one(person.id()).block();</code></pre>
+    result.block();</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 6. Transaction Access  simulating @Transactional</div>
+<div class="title">Example 42. Transaction Access  simulating @Transactional</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -772,12 +2936,10 @@ class PersonService {
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_transactions_with_only_the_sdk">Transactions with Only the SDK</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_transactions_with_only_the_sdk">Transactions with Only the SDK</h3>
 <div class="exampleblock">
-<div class="title">Example 7. Transaction Access - Blocking</div>
+<div class="title">Example 43. Transaction Access - Blocking</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -794,7 +2956,7 @@ class PersonService {
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 8. Transaction Access - Reactive</div>
+<div class="title">Example 44. Transaction Access - Reactive</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -816,9 +2978,305 @@ class PersonService {
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="couchbase.collections">Collection Support</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Couchbase supports <a href="https://docs.couchbase.com/server/current/learn/data/scopes-and-collections.html">Scopes and Collections</a>. This section documents on how to use it with Spring Data Couchbase.</p>
+</div>
+<div class="paragraph">
+<p>The <a href="https://github.com/couchbaselabs/try-cb-spring">try-cb-spring</a> sample application is a working example of using Scopes and Collections in Spring Data Couchbase.</p>
+</div>
+<div class="paragraph">
+<p>The 2021 Couchbase Connect presentation on Collections in Spring Data can be found at <a href="https://www.youtube.com/watch?v=MrplTeEFItk">Presentation Only</a> and <a href="https://web.cvent.com/hub/events/1dce8283-986d-4de9-8368-94c98f60df01/sessions/9ee89a85-833c-4e0c-81b0-807864fa351b?goBackHref=%2Fevents%2F1dce8283-986d-4de9-8368-94c98f60df01%2Fsessions&amp;goBackName=Add%2FView+Sessions&amp;goBackTab=all">Presentation with Slide Deck</a></p>
+</div>
+<div class="sect2">
+<h3 id="_requirements_2">Requirements</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Couchbase Server 7.0 or above.</p>
+</li>
+<li>
+<p>Spring Data Couchbase 4.3.1 or above.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_getting_started_configuration_2">Getting Started &amp; Configuration</h3>
+<div class="sect3">
+<h4 id="_scope_and_collection_specification">Scope and Collection Specification</h4>
+<div class="paragraph">
+<p>There are several mechanisms of specifying scopes and collections, and these may be combined, or one mechanism may override another.
+First some definitions for scopes and collections. An unspecified scope indicates that the default scope is to be used, likewise, an
+unspecified collection indicates that the default collection is to be used.
+There are only three combinations of scopes and collections that are valid. (1) the default scope and the default collection; (2) the default
+scope and a non-default collection; and (3) a non-default scope and a non-default collection. It is not possible to have a non-default
+scope and a default collection as non-default scopes do not contain a default collections, neither can one be created.</p>
+</div>
+<div class="paragraph">
+<p>A scope can be specified in the configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+static class Config extends AbstractCouchbaseConfiguration {
+
+    // Usual Setup
+    @Override public String getConnectionString() { /* ... */ }
+
+    // optionally specify the scope in the Configuration
+    @Override
+    protected String getScopeName() {
+        return "myScope"; // or a variable etc.;
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Scopes and Collections can be specified as annotations on entity classes and repositories:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+@Scope("travel")
+@Collection("airport")
+public class Airport {...</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Scope("travel")
+@Collection("airport")
+public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt; ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Scopes and Collections can be specified on templates using the inScope(scopeName) and inCollection(collectionName) fluent APIs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">List&lt;Airport&gt; airports = template.findByQuery(Airport.class).inScope("archived").all()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Scopes and Collections can be specified on repositories that extend DynamicProxyable using the withScope(scopeName) and withCollection(collectionName) APIs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt;, DynamicProxyable&lt;AirportRepository&gt;{...}
+...
+List&lt;Airport&gt; airports = airportRepository.withScope("archived").findByName(iata);</code></pre>
+</div>
+</div>
+<div class="olist arabic">
+<div class="title">The order of precedence is:</div>
+<ol class="arabic">
+<li>
+<p>inScope()/inCollection() of the template fluent api</p>
+</li>
+<li>
+<p>withScope()/withCollection() of the template/repository object</p>
+</li>
+<li>
+<p>annotation of the repository method</p>
+</li>
+<li>
+<p>annotation of the repository interface</p>
+</li>
+<li>
+<p>annotation of the entity object</p>
+</li>
+<li>
+<p>getScope() of the configuration</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.ansijoins">ANSI Joins</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes hows ANSI joins can be used across entities.
+Since 5.5 version, Couchbase server provides support for ANSI joins for joining documents using fields.
+Previous versions allowed index &amp; lookup joins, which were supported in SDC only by querying directly through the SDK.</p>
+</div>
+<div class="paragraph">
+<p>Relationships between entities across repositories can be one to one or one to many.
+By defining such relationships, a synchronized view of associated entities can be fetched.</p>
+</div>
+<div class="sect2">
+<h3 id="couchbase.ansijoins.configuration">Configuration</h3>
+<div class="paragraph">
+<p>Associated entities can be fetched by annotating the entity&#8217;s property reference with <code>@N1qlJoin</code>.
+The prefix <code>lks</code> refers to left-hand side key space (current entity) and <code>rks</code> refers to the right-hand side key space (associated entity).
+The required element for <code>@N1qlJoin</code> annotation is the <code>on</code> clause, a boolean expression representing the join condition between the left-hand side (<code>lks</code>) and the right-hand side (<code>rks</code>), which can be fields, constant expressions or any complex N1QL expression.
+There could also be an optional <code>where</code> clause specified on the annotation for the join, similarly using
+<code>lks</code> to refer the current entity and <code>rks</code> to refer the associated entity.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 45. Annotation for ANSI Join</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Document
+public class Author {
+      @Id
+      String id;
+
+      String name;
+
+      @N1qlJoin(on = "lks.name=rks.authorName")
+      List&lt;Book&gt; books;
+
+      @N1qlJoin(on = "lks.name=rks.name")
+      Address address;
+     ...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.ansijoins.fetchtype">Lazy fetching</h3>
+<div class="paragraph">
+<p>Associated entities can be lazily fetched upon the first access of the property, this could save on fetching more data than required when loading the entity.
+To load the associated entities lazily, <code>@N1qlJoin</code> annotation&#8217;s element <code>fetchType</code>
+has to be set to <code>FetchType.LAZY</code>.
+The default is <code>FetchType.IMMEDIATE</code>.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 46. Configuration for lazy fetch</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@N1qlJoin(on = "lks.name=rks.authorName", fetchType = FetchType.LAZY)
+List&lt;Book&gt; books;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="couchbase.ansijoins.joinhints">ANSI Join Hints</h3>
+<div class="sect3">
+<h4 id="_use_index_hint">Use Index Hint</h4>
+<div class="paragraph">
+<p><code>index</code> element on the <code>@N1qlJoin</code> can be used to provided the hint for the <code>lks</code> (current entity) index and <code>rightIndex</code>
+element can be used to provided the <code>rks</code> (associated entity) index.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_hash_join_hint">Hash Join Hint</h4>
+<div class="paragraph">
+<p>If the join type is going to be hash join, the hash side can be specified for the <code>rks</code> (associated entity).
+If the associated entity is on the build side, it can be specified as <code>HashSide.BUILD</code> else <code>HashSide.PROBE</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_use_keys_hint">Use Keys Hint</h4>
+<div class="paragraph">
+<p><code>keys</code> element on the <code>@N1qlJoin</code> annotation can be used to specify unique document keys to restrict the join key space.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="couchbase.caching">Caching</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes additional support for caching and <code>@Cacheable</code>.</p>
+</div>
+<div class="sect2">
+<h3 id="caching.usage">Configuration &amp; Usage</h3>
+<div class="paragraph">
+<p>Technically, caching is not part of spring-data, but is implemented directly in the spring core. Most database implementations in the spring-data package can&#8217;t support <code>@Cacheable</code>, because it is not possible to store arbitrary data.</p>
+</div>
+<div class="paragraph">
+<p>Couchbase supports both binary and JSON data, so you can get both out of the same database.</p>
+</div>
+<div class="paragraph">
+<p>To make it work, you need to add the <code>@EnableCaching</code> annotation and configure the <code>cacheManager</code> bean:</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 47. <code>AbstractCouchbaseConfiguration</code> for Caching</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableCaching
+public class Config extends AbstractCouchbaseConfiguration {
+    // general methods
+
+  @Bean
+  public CouchbaseCacheManager cacheManager(CouchbaseTemplate couchbaseTemplate) throws Exception {
+  CouchbaseCacheManager.CouchbaseCacheManagerBuilder builder = CouchbaseCacheManager.CouchbaseCacheManagerBuilder
+      .fromConnectionFactory(couchbaseTemplate.getCouchbaseClientFactory());
+    builder.withCacheConfiguration("mySpringCache", CouchbaseCacheConfiguration.defaultCacheConfig());
+    return builder.build();
+  }</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>persistent</code> identifier can then be used on the <code>@Cacheable</code> annotation to identify the cache manager to use (you can have more than one configured).</p>
+</div>
+<div class="paragraph">
+<p>Once it is set up, you can annotate every method with the <code>@Cacheable</code> annotation to transparently cache it in your couchbase bucket. You can also customize how the key is generated.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 48. Caching example</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Cacheable(value="persistent", key="'longrunsim-'+#time")
+public String simulateLongRun(long time) {
+    try {
+        Thread.sleep(time);
+    } catch(Exception ex) {
+        System.out.println("This shouldnt happen...");
+    }
+    return "I've slept " + time + " miliseconds.;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>If you run the method multiple times, you&#8217;ll see a set operation happening first, followed by multiple get operations and no sleep time (which fakes the expensive execution). You can store whatever you want, if it is JSON of course you can access it through views and look at it in the Web UI.</p>
+</div>
+<div class="paragraph">
+<p>Note that to use cache.clear() or catch.invalidate(), the bucket must have a primary key.
+:leveloffset: -1</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="appendix">Appendix</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Unresolved directive in index.adoc - include::../../../../spring-data-commons/src/main/asciidoc/repository-namespace-reference.adoc[]
+Unresolved directive in index.adoc - include::../../../../spring-data-commons/src/main/asciidoc/repository-populator-namespace-reference.adoc[]
+Unresolved directive in index.adoc - include::../../../../spring-data-commons/src/main/asciidoc/repository-query-keywords-reference.adoc[]
+Unresolved directive in index.adoc - include::../../../../spring-data-commons/src/main/asciidoc/repository-query-return-types-reference.adoc[]
+:leveloffset: -1</p>
+</div>
+</div>
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-19 16:31:07 -0700
+Version {version}<br>
+Last updated 2022-07-14 13:35:52 -0700
 </div>
 </div>
 </body>
