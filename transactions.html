@@ -454,7 +454,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>Couchbase Server 6.5 or above.</p>
+<p>Couchbase Server 6.6.1 or aabove.</p>
 </li>
 <li>
 <p>Spring Data Couchbase 5.0.0-M5 or above.</p>
@@ -643,6 +643,7 @@ If creating one explicitly, it must be created with the following (and not Trans
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Autowired TransactionalOperator txOperator;
+@Autowired ReactiveCouchbaseTemplate reactiveCouchbaseTemplate;
 
 Person person = reactiveCouchbaseTemplate.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
 Flux&lt;Person&gt; result = txOperator.execute((ctx) -&gt; reactiveCouchbaseTemplate.findById(Person.class).one(person.id())
@@ -655,7 +656,7 @@ result.blockLast();</code></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_transactions_with_only_the_sdk">Transactions with Only the SDK</h2>
+<h2 id="_transactions_directly_with_the_sdk">Transactions Directly with the SDK</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
@@ -665,11 +666,11 @@ result.blockLast();</code></pre>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired CouchbaseTemplate template;
+<pre class="highlight"><code class="language-java" data-lang="java">@Autowired ReactiveCouchbaseTemplate reactiveCouchbaseTemplate;
 
-TransactionResult result = template.getCouchbaseClientFactory().getCluster().transactions().run(ctx -&gt; {
-  return template.insertById(Person.class).one(WalterWhite);
-}, options);</code></pre>
+TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory().getCluster().transactions().run(ctx -&gt; {
+  return reactiveCouchbaseTemplate.insertById(Person.class).one(WalterWhite);
+});</code></pre>
 </div>
 </div>
 </div>
@@ -679,12 +680,12 @@ TransactionResult result = template.getCouchbaseClientFactory().getCluster().tra
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired ReactiveCouchbaseTemplate template;
+<pre class="highlight"><code class="language-java" data-lang="java">@Autowired ReactiveCouchbaseTemplate reactiveCouchbaseTemplate;
 
-TransactionResult result = template.getCouchbaseClientFactory().getCluster().reactive().transactions()
+TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory().getCluster().reactive().transactions()
     .run(ctx -&gt; TransactionalSupport.checkForTransactionInThreadLocalStorage().then(Mono.defer(() -&gt; {
-      return template.insertById(Person.class).one(WalterWhite);
-    })), options).block();</code></pre>
+      reactiveCouchbaseTemplate.insertById(Person.class).one(WalterWhite);
+    }))).block();</code></pre>
 </div>
 </div>
 </div>
@@ -694,7 +695,7 @@ TransactionResult result = template.getCouchbaseClientFactory().getCluster().rea
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-25 14:34:43 -0700
+Last updated 2022-07-25 15:09:38 -0700
 </div>
 </div>
 </body>
