@@ -2668,13 +2668,25 @@ public void configureEnvironment(ClusterEnvironment.Builder builder) {
 </div>
 </div>
 <div class="paragraph">
-<p>Functioning of the  @Transactional method annotation requires
-. the configuration class to be annotated with @EnableTransactionManagement;
-. the service object with the annotated methods must be annotated with @Service and @Component;
-. the service object with the annotated methods must be obtained as an @Bean either via @Autowire or
-from the application context;
-. the call to the method must be made from a different class than service because calling an annotated
+<p>Functioning of the  @Transactional method annotation requires</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="1">
+<li>
+<p>the configuration class to be annotated with @EnableTransactionManagement;</p>
+</li>
+<li>
+<p>the service object with the annotated methods must be annotated with @Service and @Component;</p>
+</li>
+<li>
+<p>the service object with the annotated methods must be obtained as an @Bean either via @Autowire or
+from the application context;</p>
+</li>
+<li>
+<p>the call to the method must be made from a different class than service because calling an annotated
 method from the same class will not invoke the Method Interceptor that does the transaction processing.</p>
+</li>
+</ol>
 </div>
 </div>
 <div class="sect2">
