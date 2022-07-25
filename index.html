@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Michael Nitschinger, Oliver Gierke, Simon Baslé, Michael Reiche</span><br>
 <span id="revnumber">version {version},</span>
-<span id="revdate">2022-07-21</span>
+<span id="revdate">2022-07-25</span>
 </div>
 </div>
 <div id="content">
@@ -2613,7 +2613,7 @@ User found = couchbaseTemplate.findById(User.class).one(user.getId());</code></p
 <h2 id="couchbase.transactions">Couchbase Transactions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Couchbase supports <a href="https://docs.couchbase.com/server/6.5/learn/data/transactions.html">Distributed Transactions</a>. This section documents how to use it with Spring Data Couchbase.</p>
+<p>Couchbase supports <a href="https://docs.couchbase.com/server/current/learn/data/transactions.html">Distributed Transactions</a>. This section documents how to use it with Spring Data Couchbase.</p>
 </div>
 <div class="sect2">
 <h3 id="_requirements">Requirements</h3>
@@ -2634,21 +2634,8 @@ User found = couchbaseTemplate.findById(User.class).one(user.getId());</code></p
 <div class="sect2">
 <h3 id="_getting_started_configuration">Getting Started &amp; Configuration</h3>
 <div class="paragraph">
-<p>Couchbase Transactions are leveraged with the @Transactional operator (using the Couchbase Transaction Manager), a Couchbase Transaction Template (created from the Transaction Manager),
-or the Couchbase Transactional Operator.</p>
-</div>
-<div class="paragraph">
-<p>The Couchbase Transaction Manager, Couchbase Transactional Operator and Couchbase Transaction Template(5.0.0-M6+)  are available as beans from the Configuration class that
-extends AbstractCouchbaseConfiguration.</p>
-</div>
-<div class="paragraph">
-<p>Functioning of the  @Transactional method annotation requires the configuration class to be annotated
-with @EnableTransactionManagement. The service object with the annotated methods must be obtained as an @Bean either via @Autowire or
-from the application context. And the call to the method must be made from a different class than service because calling an annotated
-method from the same class will not invoke the Method Interceptor that does the transaction processing.</p>
-</div>
-<div class="paragraph">
-<p>The samples provided are intentionally simple in that they operate on a single document. They could also operate on multiple documents.</p>
+<p>Couchbase Transactions are normally leveraged with the @Transactional operator.
+The @Transactional operator is implemented with the CouchbaseTransactionManager which is supplied as a bean in the AbstractCouchbaseConfiguration.</p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 37. Transaction Configuration</div>
@@ -2661,69 +2648,39 @@ method from the same class will not invoke the Method Interceptor that does the 
 @EnableTransactionManagement // Add for @Transactional annotation support
 static class Config extends AbstractCouchbaseConfiguration {
 
-    // Usual Setup
-    @Override public String getConnectionString() { /* ... */ }
-    @Override public String getUserName() { /* ... */ }
-    @Override public String getPassword() { /* ... */ }
-    @Override public String getBucketName() { /* ... */ }
+// Usual Setup
+@Override public String getConnectionString() { /* ... */ }
+@Override public String getUserName() { /* ... */ }
+@Override public String getPassword() { /* ... */ }
+@Override public String getBucketName() { /* ... */ }
 
-    // It should not be necessary to override the couchbaseTransactionManager() or couchbaseTransactionalOperator() methods
-    // Customization of transaction behavior is via the configureEnvironment() method
-    @Override
-    public void configureEnvironment(ClusterEnvironment.Builder builder) {
-        // allow really long transactions
-        builder.transactionsConfig(
-            TransactionsConfig.builder().timeout(Duration.ofSeconds(30)));
-    }
+// It should not be necessary to override the couchbaseTransactionManager() or couchbaseTransactionalOperator() methods
+// Customization of transaction behavior is via the configureEnvironment() method
+@Override
+public void configureEnvironment(ClusterEnvironment.Builder builder) {
+  // allow really long transactions
+  builder.transactionsConfig(
+    TransactionsConfig.builder().timeout(Duration.ofSeconds(30)));
+  }
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
+<p>Functioning of the  @Transactional method annotation requires
+. the configuration class to be annotated with @EnableTransactionManagement;
+. the service object with the annotated methods must be annotated with @Service and @Component;
+. the service object with the annotated methods must be obtained as an @Bean either via @Autowire or
+from the application context;
+. the call to the method must be made from a different class than service because calling an annotated
+method from the same class will not invoke the Method Interceptor that does the transaction processing.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_transactions_with_transactiontemplate">Transactions with TransactionTemplate</h3>
+<h3 id="_transactions_with_transactional">Transactions with @Transactional</h3>
 <div class="paragraph">
-<p>The TransactionTemplate class simplifies programmatic transaction demarcation and transaction exception handling.
-The central method is execute, supporting transactional code that implements the TransactionCallback interface. This template handles the transaction lifecycle and possible exceptions such that neither the TransactionCallback implementation nor the calling code needs to explicitly handle transactions.
-Typical usage: Allows for writing low-level data access objects that use resources such as JDBC DataSources but are not transaction-aware themselves. Instead, they can implicitly participate in transactions handled by higher-level application services utilizing this class, making calls to the low-level services via an inner-class callback object.
-Can be used within a service implementation via direct instantiation with a transaction manager reference, or get prepared in an application context and passed to services as bean reference. Note: The transaction manager should always be configured as bean in the application context: in the first case given to the service directly, in the second case given to the prepared template.
-Supports setting the propagation behavior and the isolation level by name, for convenient configuration in context definitions.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 38. Using the TransactionTemplate</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// 5.0.0-M5 transaction template bean does not exist, the TransactionTemplate must be explicitly created.
-@Autowired TransactionManager transactionManager;
-TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-
-// After M6 transaction template bean exists
-@Autowired TransactionTemplate transactionTemplate;
-
-    transactionTemplate.executeWithoutResult(status -&gt; {
-        Person p = personOperations.findById(Person.class).one(id);
-        p.setFirstname(p.getFirstname()+" Junior");
-        personOperations.replaceById(Person.class).one(p);
-    });</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_transactions_with_couchbasetransactionmanager">Transactions with CouchbaseTransactionManager</h3>
-<div class="paragraph">
-<p>Note: Reactive Couchbase Transactions cannot be supported via the
-@Transactional annotation. See the section "Transactions with CouchbaseTransactionalOperator"
-for supporting Reactive Couchbase Transactions using the Transactional Operator.</p>
-</div>
-<div class="paragraph">
-<p>@Transactional Describes a transaction attribute on an individual method or on a class.</p>
+<p>@Transactional Defines as transactional a method or all methods on a class.</p>
 </div>
 <div class="paragraph">
 <p>When this annotation is declared at the class level, it applies as a default
@@ -2734,118 +2691,76 @@ details on method visibility constraints, consult the
 <a href="https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#transaction">Transaction Management</a>
 section of the reference manual.</p>
 </div>
-<div class="paragraph">
-<p>This annotation is generally directly comparable to Spring&#8217;s
-org.springframework.transaction.interceptor.RuleBasedTransactionAttribute
-class, and in fact AnnotationTransactionAttributeSource will directly
-convert this annotation&#8217;s attributes to properties in RuleBasedTransactionAttribute,
-so that Spring&#8217;s transaction support code does not have to know about annotations.</p>
-</div>
 <div class="sect3">
 <h4 id="_attribute_semantics">Attribute Semantics</h4>
 <div class="paragraph">
-<p>If no custom rollback rules are configured in this annotation, the transaction
-will roll back on RuntimeException and Error but not on checked
-exceptions.</p>
-</div>
-<div class="paragraph">
-<p>Rollback rules determine if a transaction should be rolled back when a given
-exception is thrown, and the rules are based on types or patterns. Custom
-rules may be configured via rollbackFor/noRollbackFor and
-#rollbackForClassName/noRollbackForClassName, which allow
-rules to be specified as types or patterns, respectively.</p>
-</div>
-<div class="paragraph">
-<p>When a rollback rule is defined with an exception type, that type will be
-used to match against the type of a thrown exception and its super types,
-providing type safety and avoiding any unintentional matches that may occur
-when using a pattern. For example, a value of
-jakarta.servlet.ServletException.class will only match thrown exceptions
-of type jakarta.servlet.ServletException and its subclasses.</p>
-</div>
-<div class="paragraph">
-<p>When a rollback rule is defined with an exception pattern, the pattern can
-be a fully qualified class name or a substring of a fully qualified class name
-for an exception type (which must be a subclass of Throwable), with no
-wildcard support at present. For example, a value of
-"jakarta.servlet.ServletException" or "ServletException" will
-match jakarta.servlet.ServletException and its ubclasses.</p>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Warning</div>
-</td>
-<td class="content">
-You must carefully consider how specific a pattern
-is and whether to include package information (which isn&#8217;t mandatory). For example,
-"Exception" will match nearly anything and will probably hide other
-rules. "java.lang.Exception" would be correct if "Exception"
-were meant to define a rule for all checked exceptions. With more unique
-exception names such as "BaseBusinessException" there is likely no
-need to use the fully qualified class name for the exception pattern. Furthermore,
-rollback rules defined via patterns may result in unintentional matches for
-similarly named exceptions and nested classes. This is due to the fact that a
-thrown exception is considered to be a match for a given pattern-based rollback
-rule if the name of thrown exception contains the exception pattern configured
-for the rollback rule. For example, given a rule configured to match against
-"com.example.CustomException", that rule will match against an exception
-named com.example.CustomExceptionV2 (an exception in the same package as
-CustomException but with an additional suffix) or an exception named
-com.example.CustomException$AnotherException (an exception declared as
-a nested class in CustomException).
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>For specific information about the semantics of other attributes in this
-annotation, consult the org.springframework.transaction.TransactionDefinition
-and org.springframework.transaction.interceptor.TransactionAttribute javadocs.</p>
+<p>In this release, he Couchbase Transactions implementation in
+Spring Data Couchbase ignores all @Transactional attributes.
+The transaction will roll back on uncaught exceptions.
+The transaction isoloation level is read committed;</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_transaction_management">Transaction Management</h4>
 <div class="paragraph">
-<p>This annotation commonly works with thread-bound transactions managed by a
-org.springframework.transaction.PlatformTransactionManager, exposing a
-transaction to all data access operations within the current execution thread.
-Note: This does NOT propagate to newly started threads within the method.</p>
-</div>
-<div class="paragraph">
-<p>Couchbase does not supply a reactive transaction manager, therefore it cannot support
-@Transactional on reactive methods. Couchbase provides reactive transaction support
-via the CouchbaseTransactionalOperator.</p>
+<p>Blocking transactions are thread-bound and therefore do not propagate to newly started threads within the method.
+Non-blocking transactions are bound to the reactive context.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 39. Transaction Access</div>
+<div class="title">Example 38. Transaction Access</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// this object must be provided by the Spring framework. By @Autowire or from ac.getBean().
-// If created directly with it's constructor, the method interceptor will not be called.
+<pre class="highlight"><code class="language-java" data-lang="java">// this object must be provided by the Spring framework either by @Autowire or from ac.getBean().
+// If created directly with its constructor, the method interceptor will not be called.
 @Autowired PersonService personService;
 
-    Person p = personService.savePerson(WalterWhite);
+Person walterWhite = new Person( "Walter", "White");
+Person p = personService.save(walterWhite);
 
+----------
+
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
+
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+final CouchbaseOperations personOperations;
+final ReactiveCouchbaseOperations reactivePersonOperations;
 
 @Service
 @Component
 public class PersonService {
 
-    final CouchbaseOperations personOperations;
+  final CouchbaseOperations operations;
+  final ReactiveCouchbaseOperations reactiveOperations;
 
-    public PersonService(CouchbaseOperations ops) {
-        personOperations = ops;
-    }
+  // This method will be called for @Autowired using the
+  // CouchbaseOperations and ReactiveCouchbaseOperations @Beans
+  public PersonService(CouchbaseOperations ops, ReactiveCouchbaseOperations reactiveOps) {
+    operations = ops;
+    reactiveOperations = reactiveOps;
+  }
 
-    @Transactional(transactionManager = BeanNames.COUCHBASE_TRANSACTION_MANAGER) // default, shown for clarity
-    public Person replacePerson(String id) {
-        Person p = personOperations.findById(Person.class).one(id);
-        p.setFirstname(p.getFirstname()+" Junior");
-        return personOperations.replaceById(Person.class).one(p);
-    }
+  @Transactional
+  public Person save(Person p) {
+    return operations.save(p);
+  }
+
+  @Transactional
+  public Person changeFirstName(String id, String newFirstName) {
+    Person p = operations.findById(Person.class).one(id);
+    return operations.replaceById(Person.class).one(p.withFirstName(newFirstName);
+  }
+
+  @Transactional
+  public Mono&lt;Person&gt; reactiveChangeFirstName(String id, String newFirstName) {
+    return personOperationsRx.findById(Person.class).one(person.id())
+        .flatMap(p -&gt; personOperationsRx.replaceById(Person.class).one(p.withFirstName(newFirstName)));
+  }
+
 
 }</code></pre>
 </div>
@@ -2857,14 +2772,9 @@ public class PersonService {
 <div class="sect2">
 <h3 id="_transactions_with_couchbasetransactionaloperator">Transactions with CouchbaseTransactionalOperator</h3>
 <div class="paragraph">
-<p>CouchbaseTransactionalOperator is used for reactive transactions. It is an important class for Couchbase Transactions in Spring Data as there is no Reactive TransactionManager for Couchbase.
-The class simplifies programmatic transaction demarcation and transaction exception handling.
-The central method is transactional(), supporting transactional wrapping of functional sequences code that. This operator handles the transaction lifecycle and possible exceptions such that neither the ReactiveTransactionCallback implementation nor the calling code needs to explicitly handle transactions.
-Typical usage: Allows for writing low-level data access objects that use resources such as database connections but are not transaction-aware themselves. Instead, they can implicitly participate in transactions handled by higher-level application services utilizing this class, making calls to the low-level services via an inner-class callback object.</p>
-</div>
-<div class="paragraph">
-<p>Note that a CouchbaseTransactionalOperator is available as a bean.
-If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager)).
+<p>CouchbaseTransactionalOperator can be used to construct a tansaction in-line without creating a service class that uses @Transactional.
+CouchbaseTransactionalOperator is available as a bean and can be instantiated with @Autowire.
+If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager) as described in general Spring Data transaction documenation).
 .TransactionalOperator Construction</p>
 </div>
 <div class="exampleblock">
@@ -2877,61 +2787,16 @@ If creating one explicitly, it must be created with the following (and not Trans
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 40. Transaction Access Using TransactionalOperator.execute()</div>
+<div class="title">Example 39. Transaction Access Using TransactionalOperator.execute()</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Autowired TransactionalOperator txOperator;
 
-    Person person = rxCBTmpl.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
-    Flux&lt;Person&gt; result = txOperator.execute((ctx) -&gt; rxCBTmpl.findById(Person.class).one(person.id())
-        .flatMap(p -&gt; rxCBTmpl.replaceById(Person.class).one(p.withFirstName("Walt"))));
-    result.blockLast();</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="title">Example 41. Transaction Access Using transactional()</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired TransactionalOperator txOperator;
-
-    Person person = rxCBTmpl.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
-    Mono&lt;Person&gt; result = rxCBTmpl.findById(Person.class).one(person.id())
-        .flatMap(p -&gt; rxCBTmpl.replaceById(Person.class).one(p.withFirstName("Walt")))
-        .as(txOperator::transactional);
-    result.block();</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="title">Example 42. Transaction Access  simulating @Transactional</div>
-<div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Service
-@Component
-class PersonService {
-
-    final ReactiveCouchbaseOperations personOperationsRx;
-    final TransactionalOperator transactionalOperator;
-
-    public PersonService(ReactiveCouchbaseOperations opsRx, TransactionalOperator transactionalOperator) {
-	this.personOperationsRx = opsRx;
-        this.transactionalOperator = transactionalOperator;
-    }
-
-    // this method does not have the @Transactional annotation,
-    // but the as(trasnactionalOperator::transactional)
-    // makes it behave as though it does.
-    public Mono&lt;Person&gt; declarativeFindReplacePersonReactive(Person person) {
-        return personOperationsRx.findById(Person.class).one(person.id())
-                .flatMap(p -&gt; personOperationsRx.replaceById(Person.class).one(p.withFirstName(person.getFirstname())))
-                .as(transactionalOperator::transactional);
-    }</code></pre>
+Person person = reactiveCouchbaseTemplate.insertById(Person.class).inCollection(cName).one(WalterWhite).block();
+Flux&lt;Person&gt; result = txOperator.execute((ctx) -&gt; reactiveCouchbaseTemplate.findById(Person.class).one(person.id())
+  .flatMap(p -&gt; reactiveCouchbaseTemplate.replaceById(Person.class).one(p.withFirstName("Walt"))));
+result.blockLast();</code></pre>
 </div>
 </div>
 </div>
@@ -2939,39 +2804,34 @@ class PersonService {
 </div>
 <div class="sect2">
 <h3 id="_transactions_with_only_the_sdk">Transactions with Only the SDK</h3>
+<div class="paragraph">
+<p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
+</div>
 <div class="exampleblock">
-<div class="title">Example 43. Transaction Access - Blocking</div>
+<div class="title">Example 40. Transaction Access - Blocking</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Autowired CouchbaseTemplate template;
 
-    TransactionResult result = template.getCouchbaseClientFactory().getCluster().transactions().
-            run(ctx -&gt;
-                {
-                    return template.insertById(Person.class).one(WalterWhite);
-                },
-                options);</code></pre>
+TransactionResult result = template.getCouchbaseClientFactory().getCluster().transactions().run(ctx -&gt; {
+  return template.insertById(Person.class).one(WalterWhite);
+}, options);</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 44. Transaction Access - Reactive</div>
+<div class="title">Example 41. Transaction Access - Reactive</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Autowired ReactiveCouchbaseTemplate template;
 
-    TransactionResult result = template.getCouchbaseClientFactory().getCluster().reactive().transactions()
-        .run(ctx -&gt; TransactionalSupport.checkForTransactionInThreadLocalStorage()
-            .then(Mono.defer(() -&gt;
-                {
-                    return template.insertById(Person.class).one(WalterWhite);
-                }
-                )),
-            options)
-        .block();</code></pre>
+TransactionResult result = template.getCouchbaseClientFactory().getCluster().reactive().transactions()
+    .run(ctx -&gt; TransactionalSupport.checkForTransactionInThreadLocalStorage().then(Mono.defer(() -&gt; {
+      return template.insertById(Person.class).one(WalterWhite);
+    })), options).block();</code></pre>
 </div>
 </div>
 </div>
@@ -3121,7 +2981,7 @@ There could also be an optional <code>where</code> clause specified on the annot
 <code>lks</code> to refer the current entity and <code>rks</code> to refer the associated entity.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 45. Annotation for ANSI Join</div>
+<div class="title">Example 42. Annotation for ANSI Join</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3153,7 +3013,7 @@ has to be set to <code>FetchType.LAZY</code>.
 The default is <code>FetchType.IMMEDIATE</code>.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 46. Configuration for lazy fetch</div>
+<div class="title">Example 43. Configuration for lazy fetch</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3207,7 +3067,7 @@ If the associated entity is on the build side, it can be specified as <code>Hash
 <p>To make it work, you need to add the <code>@EnableCaching</code> annotation and configure the <code>cacheManager</code> bean:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 47. <code>AbstractCouchbaseConfiguration</code> for Caching</div>
+<div class="title">Example 44. <code>AbstractCouchbaseConfiguration</code> for Caching</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3234,7 +3094,7 @@ public class Config extends AbstractCouchbaseConfiguration {
 <p>Once it is set up, you can annotate every method with the <code>@Cacheable</code> annotation to transparently cache it in your couchbase bucket. You can also customize how the key is generated.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 48. Caching example</div>
+<div class="title">Example 45. Caching example</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
