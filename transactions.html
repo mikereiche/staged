@@ -490,7 +490,6 @@ static class Config extends AbstractCouchbaseConfiguration {
 @Override public String getPassword() { /* ... */ }
 @Override public String getBucketName() { /* ... */ }
 
-// It should not be necessary to override the couchbaseTransactionManager() or couchbaseTransactionalOperator() methods
 // Customization of transaction behavior is via the configureEnvironment() method
 @Override
 public void configureEnvironment(ClusterEnvironment.Builder builder) {
@@ -695,7 +694,7 @@ TransactionResult result = template.getCouchbaseClientFactory().getCluster().rea
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-25 14:20:38 -0700
+Last updated 2022-07-25 14:34:43 -0700
 </div>
 </div>
 </body>

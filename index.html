@@ -2654,7 +2654,6 @@ static class Config extends AbstractCouchbaseConfiguration {
 @Override public String getPassword() { /* ... */ }
 @Override public String getBucketName() { /* ... */ }
 
-// It should not be necessary to override the couchbaseTransactionManager() or couchbaseTransactionalOperator() methods
 // Customization of transaction behavior is via the configureEnvironment() method
 @Override
 public void configureEnvironment(ClusterEnvironment.Builder builder) {
