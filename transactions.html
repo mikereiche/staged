@@ -467,11 +467,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
+<h2 id="_overview">Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Spring Data Couchbase template operations insert, find, replace and delete and repository methods that use those calls can participate in a Couchbase Transaction. They can be executed in a transaction by using the @Transactional annotation, the CouchbaseTransactionalOperator, or in the lambda of a Couchbase Transaction.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_getting_started_configuration">Getting Started &amp; Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Couchbase Transactions are normally leveraged with the @Transactional operator.
-The @Transactional operator is implemented with the CouchbaseTransactionManager which is supplied as a bean in the AbstractCouchbaseConfiguration.</p>
+<p>Couchbase Transactions are normally leveraged with a method annotated with @Transactional.
+The @Transactional operator is implemented with the CouchbaseTransactionManager which is supplied as a bean in the AbstractCouchbaseConfiguration.
+Couchbase Transactions can be used without defining a service class by using CouchbaseTransactionOperator which is also supplied as a bean in AbtractCouchbaseConfiguration.
+Couchbase Transactions can also be used directly using Spring Data Couchbase operations within a lambda <a href="https://docs.couchbase.com/server/current/learn/data/transactions.html#using-transactions">Using Transactions</a></p>
 </div>
 <div class="exampleblock">
 <div class="title">Example 1. Transaction Configuration</div>
@@ -481,21 +491,19 @@ The @Transactional operator is implemented with the CouchbaseTransactionManager 
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
 @EnableReactiveCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
-@EnableTransactionManagement // Add for @Transactional annotation support
+@EnableTransactionManagement <b class="conum">(1)</b>
 static class Config extends AbstractCouchbaseConfiguration {
 
-// Usual Setup
-@Override public String getConnectionString() { /* ... */ }
-@Override public String getUserName() { /* ... */ }
-@Override public String getPassword() { /* ... */ }
-@Override public String getBucketName() { /* ... */ }
+  // Usual Setup
+  @Override public String getConnectionString() { /* ... */ }
+  @Override public String getUserName() { /* ... */ }
+  @Override public String getPassword() { /* ... */ }
+  @Override public String getBucketName() { /* ... */ }
 
-// Customization of transaction behavior is via the configureEnvironment() method
-@Override
-public void configureEnvironment(ClusterEnvironment.Builder builder) {
-  // allow really long transactions
-  builder.transactionsConfig(
-    TransactionsConfig.builder().timeout(Duration.ofSeconds(30)));
+  // Customization of transaction behavior is via the configureEnvironment() method
+  @Override protected void configureEnvironment(final Builder builder) {
+    builder.transactionsConfig(
+      TransactionsConfig.builder().timeout(Duration.ofSeconds(30)));
   }
 }</code></pre>
 </div>
@@ -529,23 +537,16 @@ method from the same class will not invoke the Method Interceptor that does the 
 <h2 id="_transactions_with_transactional">Transactions with @Transactional</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>@Transactional Defines as transactional a method or all methods on a class.</p>
+<p>@Transactional defines as transactional a method or all methods on a class.</p>
 </div>
 <div class="paragraph">
 <p>When this annotation is declared at the class level, it applies as a default
-to all methods of the declaring class and its subclasses. Note that it does not
-apply to ancestor classes up the class hierarchy; inherited methods need to be
-locally redeclared in order to participate in a subclass-level annotation. For
-details on method visibility constraints, consult the
-<a href="https://docs.spring.io/spring-framework/docs/current/reference/html/data-access.html#transaction">Transaction Management</a>
-section of the reference manual.</p>
+to all methods of the declaring class and its subclasses.</p>
 </div>
 <div class="sect2">
 <h3 id="_attribute_semantics">Attribute Semantics</h3>
 <div class="paragraph">
-<p>In this release, he Couchbase Transactions implementation in
-Spring Data Couchbase ignores all @Transactional attributes.
-The transaction will roll back on uncaught exceptions.
+<p>In this release, the Couchbase Transactions ignores the rollback attributes.
 The transaction isoloation level is read committed;</p>
 </div>
 </div>
@@ -560,7 +561,7 @@ Non-blocking transactions are bound to the reactive context.</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// this object must be provided by the Spring framework either by @Autowire or from ac.getBean().
+<pre class="highlight"><code class="language-java" data-lang="java">// this object must be provided by the Spring framework by @Autowire.
 // If created directly with its constructor, the method interceptor will not be called.
 @Autowired PersonService personService;
 
@@ -625,10 +626,10 @@ public class PersonService {
 <div class="paragraph">
 <p>CouchbaseTransactionalOperator can be used to construct a tansaction in-line without creating a service class that uses @Transactional.
 CouchbaseTransactionalOperator is available as a bean and can be instantiated with @Autowire.
-If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager) as described in general Spring Data transaction documenation).
-.TransactionalOperator Construction</p>
+If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager) as described in general Spring Data transaction documenation).</p>
 </div>
 <div class="exampleblock">
+<div class="title">Example 3. TransactionalOperator Construction</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -638,7 +639,7 @@ If creating one explicitly, it must be created with the following (and not Trans
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 3. Transaction Access Using TransactionalOperator.execute()</div>
+<div class="title">Example 4. Transaction Access Using TransactionalOperator.execute()</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -662,7 +663,7 @@ result.blockLast();</code></pre>
 <p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 4. Transaction Access - Blocking</div>
+<div class="title">Example 5. Transaction Access - Blocking</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -676,7 +677,7 @@ TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory()
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. Transaction Access - Reactive</div>
+<div class="title">Example 6. Transaction Access - Reactive</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -695,7 +696,7 @@ TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory()
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-25 15:09:38 -0700
+Last updated 2022-07-26 12:02:29 -0700
 </div>
 </div>
 </body>
