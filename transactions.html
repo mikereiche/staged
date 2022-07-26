@@ -483,8 +483,27 @@ The @Transactional operator is implemented with the CouchbaseTransactionManager 
 Couchbase Transactions can be used without defining a service class by using CouchbaseTransactionOperator which is also supplied as a bean in AbtractCouchbaseConfiguration.
 Couchbase Transactions can also be used directly using Spring Data Couchbase operations within a lambda <a href="https://docs.couchbase.com/server/current/learn/data/transactions.html#using-transactions">Using Transactions</a></p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_transactions_with_transactional">Transactions with @Transactional</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<div class="title">Transaction Configuration</div>
+<p>@Transactional defines as transactional a method or all methods on a class.</p>
+</div>
+<div class="paragraph">
+<p>When this annotation is declared at the class level, it applies as a default
+to all methods of the declaring class and its subclasses.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_semantics">Attribute Semantics</h3>
+<div class="paragraph">
+<p>In this release, the Couchbase Transactions ignores the rollback attributes.
+The transaction isoloation level is read committed;</p>
+</div>
 <div class="exampleblock">
-<div class="title">Example 1. Transaction Configuration</div>
+<div class="title">Example 1. Transaction Configuration and Use by @Transactional</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -508,69 +527,9 @@ static class Config extends AbstractCouchbaseConfiguration {
 }</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="paragraph">
-<p>Functioning of the  @Transactional method annotation requires</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic" start="1">
-<li>
-<p>the configuration class to be annotated with @EnableTransactionManagement;</p>
-</li>
-<li>
-<p>the service object with the annotated methods must be annotated with @Service and @Component;</p>
-</li>
-<li>
-<p>the service object with the annotated methods must be obtained as an @Bean either via @Autowire or
-from the application context;</p>
-</li>
-<li>
-<p>the call to the method must be made from a different class than service because calling an annotated
-method from the same class will not invoke the Method Interceptor that does the transaction processing.</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_transactions_with_transactional">Transactions with @Transactional</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>@Transactional defines as transactional a method or all methods on a class.</p>
-</div>
-<div class="paragraph">
-<p>When this annotation is declared at the class level, it applies as a default
-to all methods of the declaring class and its subclasses.</p>
-</div>
-<div class="sect2">
-<h3 id="_attribute_semantics">Attribute Semantics</h3>
-<div class="paragraph">
-<p>In this release, the Couchbase Transactions ignores the rollback attributes.
-The transaction isoloation level is read committed;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_transaction_management">Transaction Management</h3>
-<div class="paragraph">
-<p>Blocking transactions are thread-bound and therefore do not propagate to newly started threads within the method.
-Non-blocking transactions are bound to the reactive context.</p>
-</div>
-<div class="exampleblock">
-<div class="title">Example 2. Transaction Access</div>
-<div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">// this object must be provided by the Spring framework by @Autowire.
-// If created directly with its constructor, the method interceptor will not be called.
-@Autowired PersonService personService;
-
-Person walterWhite = new Person( "Walter", "White");
-Person p = personService.save(walterWhite);
-
-----------
-
-import reactor.core.publisher.Mono;
+<pre class="highlight"><code class="language-java" data-lang="java">import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
 import org.springframework.stereotype.Component;
@@ -580,15 +539,13 @@ import org.springframework.transaction.annotation.Transactional;
 final CouchbaseOperations personOperations;
 final ReactiveCouchbaseOperations reactivePersonOperations;
 
-@Service
+@Service <b class="conum">(2)</b>
 @Component
 public class PersonService {
 
   final CouchbaseOperations operations;
   final ReactiveCouchbaseOperations reactiveOperations;
 
-  // This method will be called for @Autowired using the
-  // CouchbaseOperations and ReactiveCouchbaseOperations @Beans
   public PersonService(CouchbaseOperations ops, ReactiveCouchbaseOperations reactiveOps) {
     operations = ops;
     reactiveOperations = reactiveOps;
@@ -611,9 +568,36 @@ public class PersonService {
         .flatMap(p -&gt; personOperationsRx.replaceById(Person.class).one(p.withFirstName(newFirstName)));
   }
 
-
 }</code></pre>
 </div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Autowired PersonService personService; <b class="conum">(3)</b>
+
+Person walterWhite = new Person( "Walter", "White");
+Person p = personService.save(walterWhite); <b class="conum">(4)</b></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Functioning of the  @Transactional method annotation requires</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic" start="1">
+<li>
+<p>the configuration class to be annotated with @EnableTransactionManagement;</p>
+</li>
+<li>
+<p>the service object with the annotated methods must be annotated with @Service and @Component;</p>
+</li>
+<li>
+<p>the service object with the annotated methods must be obtained via @Autowired.</p>
+</li>
+<li>
+<p>the call to the method must be made from a different class than service because calling an annotated
+method from the same class will not invoke the Method Interceptor that does the transaction processing.</p>
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -625,11 +609,11 @@ public class PersonService {
 <div class="sectionbody">
 <div class="paragraph">
 <p>CouchbaseTransactionalOperator can be used to construct a tansaction in-line without creating a service class that uses @Transactional.
-CouchbaseTransactionalOperator is available as a bean and can be instantiated with @Autowire.
+CouchbaseTransactionalOperator is available as a bean and can be instantiated with @Autowired.
 If creating one explicitly, it must be created with the following (and not TransactionalOperator.create(manager) as described in general Spring Data transaction documenation).</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 3. TransactionalOperator Construction</div>
+<div class="title">Example 2. TransactionalOperator Construction</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -639,7 +623,7 @@ If creating one explicitly, it must be created with the following (and not Trans
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 4. Transaction Access Using TransactionalOperator.execute()</div>
+<div class="title">Example 3. Transaction Access Using TransactionalOperator.execute()</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -663,7 +647,7 @@ result.blockLast();</code></pre>
 <p>Please see the <a href="https://docs.couchbase.com/java-sdk/current/howtos/distributed-acid-transactions-from-the-sdk.html">Reference Documentation</a></p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 5. Transaction Access - Blocking</div>
+<div class="title">Example 4. Transaction Access - Blocking</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -677,7 +661,7 @@ TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory()
 </div>
 </div>
 <div class="exampleblock">
-<div class="title">Example 6. Transaction Access - Reactive</div>
+<div class="title">Example 5. Transaction Access - Reactive</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -696,7 +680,7 @@ TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory()
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-26 12:02:29 -0700
+Last updated 2022-07-26 15:30:43 -0700
 </div>
 </div>
 </body>
