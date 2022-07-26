@@ -482,10 +482,9 @@ There are only three combinations of scopes and collections that are valid. (1) 
 scope and a non-default collection; and (3) a non-default scope and a non-default collection. It is not possible to have a non-default
 scope and a default collection as non-default scopes do not contain a default collections, neither can one be created.</p>
 </div>
-<div class="paragraph">
-<div class="title">A scope can be specified in the configuration:</div>
-<p>===</p>
-</div>
+<div class="exampleblock">
+<div class="title">Example 1. A scope can be specified in the configuration:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
@@ -503,11 +502,11 @@ static class Config extends AbstractCouchbaseConfiguration {
 }</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===
-.Scopes and Collections can be specified as annotations on entity classes and repositories:
-===</p>
 </div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2. Scopes and Collections can be specified as annotations on entity classes and repositories:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Document
@@ -516,12 +515,10 @@ static class Config extends AbstractCouchbaseConfiguration {
 public class Airport {...</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Scope("travel")
@@ -529,25 +526,21 @@ public class Airport {...</code></pre>
 public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt; ...</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<div class="title">Scopes and Collections can be specified on templates using the inScope(scopeName) and inCollection(collectionName) fluent APIs:</div>
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="title">Example 3. Scopes and Collections can be specified on templates using the inScope(scopeName) and inCollection(collectionName) fluent APIs:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">List&lt;Airport&gt; airports = template.findByQuery(Airport.class).inScope("archived").all()</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<div class="title">Scopes and Collections can be specified on repositories that extend DynamicProxyable using the withScope(scopeName) and withCollection(collectionName) APIs:</div>
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="title">Example 4. Scopes and Collections can be specified on repositories that extend DynamicProxyable using the withScope(scopeName) and withCollection(collectionName) APIs:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt;, DynamicProxyable&lt;AirportRepository&gt;{...}
@@ -555,8 +548,7 @@ public interface AirportRepository extends CouchbaseRepository&lt;Airport, Strin
 List&lt;Airport&gt; airports = airportRepository.withScope("archived").findByName(iata);</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
+</div>
 </div>
 <div class="olist arabic">
 <div class="title">The order of precedence is:</div>
@@ -587,7 +579,7 @@ List&lt;Airport&gt; airports = airportRepository.withScope("archived").findByNam
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-26 15:07:40 -0700
+Last updated 2022-07-26 15:09:56 -0700
 </div>
 </div>
 </body>

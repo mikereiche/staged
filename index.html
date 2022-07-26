@@ -2887,10 +2887,9 @@ There are only three combinations of scopes and collections that are valid. (1) 
 scope and a non-default collection; and (3) a non-default scope and a non-default collection. It is not possible to have a non-default
 scope and a default collection as non-default scopes do not contain a default collections, neither can one be created.</p>
 </div>
-<div class="paragraph">
-<div class="title">A scope can be specified in the configuration:</div>
-<p>===</p>
-</div>
+<div class="exampleblock">
+<div class="title">Example 43. A scope can be specified in the configuration:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
@@ -2908,11 +2907,11 @@ static class Config extends AbstractCouchbaseConfiguration {
 }</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===
-.Scopes and Collections can be specified as annotations on entity classes and repositories:
-===</p>
 </div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 44. Scopes and Collections can be specified as annotations on entity classes and repositories:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Document
@@ -2921,12 +2920,10 @@ static class Config extends AbstractCouchbaseConfiguration {
 public class Airport {...</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Scope("travel")
@@ -2934,25 +2931,21 @@ public class Airport {...</code></pre>
 public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt; ...</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<div class="title">Scopes and Collections can be specified on templates using the inScope(scopeName) and inCollection(collectionName) fluent APIs:</div>
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="title">Example 45. Scopes and Collections can be specified on templates using the inScope(scopeName) and inCollection(collectionName) fluent APIs:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">List&lt;Airport&gt; airports = template.findByQuery(Airport.class).inScope("archived").all()</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
 </div>
-<div class="paragraph">
-<div class="title">Scopes and Collections can be specified on repositories that extend DynamicProxyable using the withScope(scopeName) and withCollection(collectionName) APIs:</div>
-<p>===</p>
 </div>
+<div class="exampleblock">
+<div class="title">Example 46. Scopes and Collections can be specified on repositories that extend DynamicProxyable using the withScope(scopeName) and withCollection(collectionName) APIs:</div>
+<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">public interface AirportRepository extends CouchbaseRepository&lt;Airport, String&gt;, DynamicProxyable&lt;AirportRepository&gt;{...}
@@ -2960,8 +2953,7 @@ public interface AirportRepository extends CouchbaseRepository&lt;Airport, Strin
 List&lt;Airport&gt; airports = airportRepository.withScope("archived").findByName(iata);</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===</p>
+</div>
 </div>
 <div class="olist arabic">
 <div class="title">The order of precedence is:</div>
@@ -3012,7 +3004,7 @@ There could also be an optional <code>where</code> clause specified on the annot
 <code>lks</code> to refer the current entity and <code>rks</code> to refer the associated entity.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 43. Annotation for ANSI Join</div>
+<div class="title">Example 47. Annotation for ANSI Join</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3044,7 +3036,7 @@ has to be set to <code>FetchType.LAZY</code>.
 The default is <code>FetchType.IMMEDIATE</code>.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 44. Configuration for lazy fetch</div>
+<div class="title">Example 48. Configuration for lazy fetch</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3098,7 +3090,7 @@ If the associated entity is on the build side, it can be specified as <code>Hash
 <p>To make it work, you need to add the <code>@EnableCaching</code> annotation and configure the <code>cacheManager</code> bean:</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 45. <code>AbstractCouchbaseConfiguration</code> for Caching</div>
+<div class="title">Example 49. <code>AbstractCouchbaseConfiguration</code> for Caching</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3125,7 +3117,7 @@ public class Config extends AbstractCouchbaseConfiguration {
 <p>Once it is set up, you can annotate every method with the <code>@Cacheable</code> annotation to transparently cache it in your couchbase bucket. You can also customize how the key is generated.</p>
 </div>
 <div class="exampleblock">
-<div class="title">Example 46. Caching example</div>
+<div class="title">Example 50. Caching example</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
