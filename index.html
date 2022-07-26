@@ -2649,7 +2649,6 @@ Couchbase Transactions can also be used directly using Spring Data Couchbase ope
 <div class="sect2">
 <h3 id="_transactions_with_transactional">Transactions with @Transactional</h3>
 <div class="paragraph">
-<div class="title">Transaction Configuration</div>
 <p>@Transactional defines as transactional a method or all methods on a class.</p>
 </div>
 <div class="paragraph">
@@ -2666,11 +2665,12 @@ The transaction isoloation level is read committed;</p>
 <div class="title">Example 37. Transaction Configuration and Use by @Transactional</div>
 <div class="content">
 <div class="listingblock">
+<div class="title">The Configuration</div>
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">@Configuration
 @EnableCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
 @EnableReactiveCouchbaseRepositories("&lt;parent-dir-of-repository-interfaces&gt;")
-@EnableTransactionManagement <b class="conum">(1)</b>
+@EnableTransactionManagement // <b class="conum">(1)</b>
 static class Config extends AbstractCouchbaseConfiguration {
 
   // Usual Setup
@@ -2687,20 +2687,23 @@ static class Config extends AbstractCouchbaseConfiguration {
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<div class="title">A Transactional Service Class</div>
+<p>Note that the body of @Transactional methods can be retried if the transaction fails - due
+to a CAS-mismatch for instance. It is imperative that they be idempotent.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 final CouchbaseOperations personOperations;
 final ReactiveCouchbaseOperations reactivePersonOperations;
 
-@Service <b class="conum">(2)</b>
-@Component
+@Service // <b class="conum">(2)</b>
 public class PersonService {
 
   final CouchbaseOperations operations;
@@ -2711,14 +2714,14 @@ public class PersonService {
     reactiveOperations = reactiveOps;
   }
 
-  @Transactional
+  // no annotatin results in this method being executed not in a transaction
   public Person save(Person p) {
     return operations.save(p);
   }
 
   @Transactional
   public Person changeFirstName(String id, String newFirstName) {
-    Person p = operations.findById(Person.class).one(id);
+    Person p = operations.findById(Person.class).one(id); // <b class="conum">(3)</b>
     return operations.replaceById(Person.class).one(p.withFirstName(newFirstName);
   }
 
@@ -2733,10 +2736,12 @@ public class PersonService {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@Autowired PersonService personService; <b class="conum">(3)</b>
+<pre class="highlight"><code class="language-java" data-lang="java">@Autowired PersonService personService; // <b class="conum">(4)</b>
 
 Person walterWhite = new Person( "Walter", "White");
-Person p = personService.save(walterWhite); <b class="conum">(4)</b></code></pre>
+Person p = personService.save(walterWhite); // this is not a transactional method
+...
+Person p = personService.changeFirstName(walterWhite.getId(), "Ricky"); // <b class="conum">(5)</b></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2748,7 +2753,10 @@ Person p = personService.save(walterWhite); <b class="conum">(4)</b></code></pre
 <p>the configuration class to be annotated with @EnableTransactionManagement;</p>
 </li>
 <li>
-<p>the service object with the annotated methods must be annotated with @Service and @Component;</p>
+<p>the service object with the annotated methods must be annotated with @Service;</p>
+</li>
+<li>
+<p>the body of the method is executed in a transaction.</p>
 </li>
 <li>
 <p>the service object with the annotated methods must be obtained via @Autowired.</p>
