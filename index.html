@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="details">
 <span id="author" class="author">Michael Nitschinger, Oliver Gierke, Simon Baslé, Michael Reiche</span><br>
 <span id="revnumber">version {version},</span>
-<span id="revdate">2022-07-26</span>
+<span id="revdate">2022-07-27</span>
 </div>
 </div>
 <div id="content">
@@ -2627,6 +2627,9 @@ User found = couchbaseTemplate.findById(User.class).one(user.getId());</code></p
 </li>
 <li>
 <p>NTP should be configured so nodes of the Couchbase cluster are in sync with time. The time being out of sync will not cause incorrect behavior, but can impact metadata cleanup.</p>
+</li>
+<li>
+<p>Set spring.main.allow-bean-definition-overriding=true either in application.properties or as a SpringApplicationBuilder property.</p>
 </li>
 </ul>
 </div>

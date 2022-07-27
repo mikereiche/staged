@@ -462,6 +462,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li>
 <p>NTP should be configured so nodes of the Couchbase cluster are in sync with time. The time being out of sync will not cause incorrect behavior, but can impact metadata cleanup.</p>
 </li>
+<li>
+<p>Set spring.main.allow-bean-definition-overriding=true either in application.properties or as a SpringApplicationBuilder property.</p>
+</li>
 </ul>
 </div>
 </div>
@@ -689,7 +692,7 @@ TransactionResult result = reactiveCouchbaseTemplate.getCouchbaseClientFactory()
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-07-26 16:41:49 -0700
+Last updated 2022-07-27 15:54:01 -0700
 </div>
 </div>
 </body>
